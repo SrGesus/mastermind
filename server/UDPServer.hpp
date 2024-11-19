@@ -1,3 +1,5 @@
+#ifndef UDPSERVER_HPP_
+#define UDPSERVER_HPP_
 #include <errno.h>
 #include <netdb.h>
 #include <stdio.h>
@@ -5,7 +7,7 @@
 #include <string.h>
 #include <sys/socket.h>
 
-#include <../common/UDPSocket.hpp>
+#include <common/UDPSocket.hpp>
 
 class UDPServer {
  private:
@@ -37,6 +39,11 @@ class UDPServer {
 
     freeaddrinfo(res);
   }
+
+  void processRequest() {
+    socklen_t addrlen;
+    struct sockaddr_in addr;
+  }
 };
 
-#undef BUFFER_SIZE
+#endif  // UDPSERVER_HPP_

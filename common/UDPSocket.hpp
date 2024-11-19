@@ -1,3 +1,6 @@
+#ifndef UDPSOCKET_HPP_
+#define UDPSOCKET_HPP_
+
 #include <errno.h>
 #include <netdb.h>
 #include <stdlib.h>
@@ -5,16 +8,11 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
-#include <utils.hpp>
-
-// Revisit this value
-#define BUFFER_SIZE 128
+#include <common/utils.hpp>
 
 class UDPSocket {
  private:
   char _buf[BUFFER_SIZE];
-
- protected:
   int _fd;
 
  public:
@@ -29,18 +27,18 @@ class UDPSocket {
   /// @param addr Socket address.
   /// @param addrlen Socket address length.
   /// @note If unsuccessful will print a warning.
-  void sendto(const char *in, struct sockaddr &addr, socklen_t addrlen) {
+  void sendto(const char *in, sockaddr &addr, socklen_t addrlen) {
     size_t n = strlen(in);
-    ssize_t n_sent = ::sendto(_fd, in, n, 0, (struct sockaddr *)&addr, addrlen);
+    ssize_t n_sent = ::sendto(_fd, in, n, 0, &addr, addrlen);
     if (n_sent != n)
       WARN("UDP Failed to send %zu bytes: %s\n", n, strerror(errno));
   }
 
-  /// @brief Receives
+  /// @brief Receives message and retrieves the address of the sender.
   /// @param addr Reference to address struct in which address will be stored.
   /// @param addrlen Reference in which address length will be stored.
   /// @note If unsuccessful will print a warning.
-  char *recvfrom(struct sockaddr &addr, socklen_t &addrlen) {
+  char *recvfrom(sockaddr &addr, socklen_t &addrlen) {
     ssize_t n_recv = ::recvfrom(_fd, _buf, BUFFER_SIZE - 1, 0, &addr, &addrlen);
     if (n_recv == -1) {
       WARN("UDP Failed to receive bytes: %s\n", strerror(errno));
@@ -62,4 +60,4 @@ class UDPSocket {
   ~UDPSocket() { close(_fd); }
 };
 
-#undef BUFFER_SIZE
+#endif  // UDPSOCKET_HPP_

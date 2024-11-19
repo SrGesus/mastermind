@@ -1,3 +1,6 @@
+#ifndef UDPCLIENT_HPP_
+#define UDPCLIENT_HPP_
+
 #include <errno.h>
 #include <netdb.h>
 #include <stdio.h>
@@ -5,7 +8,7 @@
 #include <string.h>
 #include <sys/socket.h>
 
-#include <../common/UDPSocket.hpp>
+#include <common/UDPSocket.hpp>
 
 class UDPClient {
  private:
@@ -32,9 +35,7 @@ class UDPClient {
     }
   }
 
-  ~UDPClient() {
-    freeaddrinfo(this->_res);
-  }
+  ~UDPClient() { freeaddrinfo(this->_res); }
 };
 
-#undef BUFFER_SIZE
+#endif  // UDPCLIENT_HPP_

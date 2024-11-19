@@ -4,7 +4,7 @@ SOURCE := $(wildcard $(addsuffix /*.c, $(SRC_DIRS)) $(addsuffix /*.cpp, $(SRC_DI
 HEADER := $(wildcard $(addsuffix /*.h, $(SRC_DIRS)) $(addsuffix /*.hpp, $(SRC_DIRS)))
 
 tidy: $(SOURCE) $(HEADER)
-	clang-tidy $^ -- -Icommon -Iserver -Iclient
+	clang-tidy $^ -- -I.
 
 format: $(SOURCE) $(HEADER)
 	clang-format -i $^
