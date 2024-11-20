@@ -27,7 +27,7 @@ class UDPSocket {
   /// @param addr Socket address.
   /// @param addrlen Socket address length.
   /// @note If unsuccessful will print a warning.
-  void sendto(const char *in, sockaddr &addr, socklen_t addrlen) {
+  void sendto(const char *in, const sockaddr &addr, socklen_t addrlen) {
     size_t n = strlen(in);
     ssize_t n_sent = ::sendto(_fd, in, n, 0, &addr, addrlen);
     if (n_sent != n)

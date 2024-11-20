@@ -8,9 +8,7 @@ class UDPServerParser {
   char _buf[BUFFER_SIZE];
 
  public:
-  const char *executeRequest(const char *req) {
-    return _buf;
-  }
+  const char *executeRequest(const char *req) { return _buf; }
 };
 
 #endif  // UDPSERVERPARSER_HPP_

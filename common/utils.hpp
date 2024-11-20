@@ -3,8 +3,8 @@
 
 #include <stdio.h>
 
-// Revisit this value
-#define BUFFER_SIZE 128
+/// @todo Revisit this value
+const int BUFFER_SIZE = 128;
 
 /// @brief This macro is for fatal errors that cannot be recovered from.
 #define ERROR(...)                            \

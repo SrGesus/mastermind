@@ -8,6 +8,7 @@
 #include <sys/socket.h>
 
 #include <common/UDPSocket.hpp>
+#include <server/UDPServerParser.hpp>
 
 class UDPServer {
  private:
@@ -40,9 +41,15 @@ class UDPServer {
     freeaddrinfo(res);
   }
 
-  void processRequest() {
+  void processRequest(UDPServerParser &parser) {
     socklen_t addrlen;
     struct sockaddr_in addr;
+
+    const char *result = _socket.recvfrom((sockaddr &)addr, addrlen);
+
+    result = parser.executeRequest(result);
+
+    _socket.sendto(result, (sockaddr &)addr, addrlen);
   }
 };
 
