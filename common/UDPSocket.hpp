@@ -57,6 +57,14 @@ class UDPSocket {
     return ::bind(_fd, addr, len);
   }
 
+  void set(fd_set &set) {
+    FD_SET(_fd, &set);
+  }
+
+  bool isSet(fd_set &set) {
+    FD_ISSET(_fd, &set);
+  }
+
   ~UDPSocket() { close(_fd); }
 };
 
