@@ -19,7 +19,7 @@ class UDPSocket {
   /// @brief Creates an UDP Socket.
   UDPSocket() {
     _fd = socket(AF_INET, SOCK_DGRAM, 0);  // UDP socket
-    if (_fd == -1) ERROR("Failed to create Socket: %s\n", strerror(errno));
+    if (_fd == -1) ERROR("Failed to create UDP Socket: %s\n", strerror(errno));
   }
 
   /// @brief Sends null-terminated string to provided address.
@@ -38,8 +38,9 @@ class UDPSocket {
   /// @param addr Reference to address struct in which address will be stored.
   /// @param addrlen Reference in which address length will be stored.
   /// @note If unsuccessful will print a warning.
-  char *recvfrom(sockaddr &addr, socklen_t &addrlen) {
-    ssize_t n_recv = ::recvfrom(_fd, _buf, BUFFER_SIZE - 1, 0, &addr, &addrlen);
+  char *recvfrom(sockaddr_in &addr, socklen_t &addrlen) {
+    ssize_t n_recv =
+        ::recvfrom(_fd, _buf, BUFFER_SIZE - 1, 0, (sockaddr *)&addr, &addrlen);
     if (n_recv == -1) {
       WARN("UDP Failed to receive bytes: %s\n", strerror(errno));
       n_recv = 0;
@@ -53,17 +54,17 @@ class UDPSocket {
   /// @param len Address length
   /// @return On success, zero is returned. On error, -1 is returned, and errno
   /// is set to indicate the error.
-  int bind(const sockaddr *addr, socklen_t len) {
-    return ::bind(_fd, addr, len);
+  int bind(const sockaddr &addr, socklen_t len) {
+    return ::bind(_fd, &addr, len);
   }
 
-  void set(fd_set &set) {
-    FD_SET(_fd, &set);
-  }
+  /// @brief Adds socket to fd_set.
+  /// @param set fd_set to be used.
+  void set(fd_set &set) { FD_SET(_fd, &set); }
 
-  bool isSet(fd_set &set) {
-    FD_ISSET(_fd, &set);
-  }
+  /// @brief Checks if socket is active.
+  /// @param set fd_set to be used.
+  bool isSet(const fd_set &set) { return FD_ISSET(_fd, &set); }
 
   ~UDPSocket() { close(_fd); }
 };
