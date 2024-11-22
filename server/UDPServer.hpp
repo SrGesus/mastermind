@@ -45,12 +45,15 @@ class UDPServer {
     socklen_t addrlen;
     struct sockaddr_in addr;
 
-    const char *result = _socket.recvfrom(addr, addrlen);
+    const char *result = _socket.recvfrom(&addr, &addrlen);
 
     result = parser.executeRequest(result);
 
     _socket.sendto(result, (sockaddr &)addr, addrlen);
   }
+
+  /// @return Server's UDP socket.
+  UDPSocket &socket() { return _socket; }
 };
 
 #endif  // UDPSERVER_HPP_

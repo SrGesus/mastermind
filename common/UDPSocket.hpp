@@ -30,7 +30,7 @@ class UDPSocket {
   void sendto(const char *in, const sockaddr &addr, socklen_t addrlen) {
     size_t n = strlen(in);
     ssize_t n_sent = ::sendto(_fd, in, n, 0, &addr, addrlen);
-    if (n_sent != n)
+    if (n_sent == -1)
       WARN("UDP Failed to send %zu bytes: %s\n", n, strerror(errno));
   }
 
@@ -38,9 +38,9 @@ class UDPSocket {
   /// @param addr Reference to address struct in which address will be stored.
   /// @param addrlen Reference in which address length will be stored.
   /// @note If unsuccessful will print a warning.
-  char *recvfrom(sockaddr_in &addr, socklen_t &addrlen) {
+  char *recvfrom(sockaddr_in *addr, socklen_t *addrlen) {
     ssize_t n_recv =
-        ::recvfrom(_fd, _buf, BUFFER_SIZE - 1, 0, (sockaddr *)&addr, &addrlen);
+        ::recvfrom(_fd, _buf, BUFFER_SIZE - 1, 0, (sockaddr *)addr, addrlen);
     if (n_recv == -1) {
       WARN("UDP Failed to receive bytes: %s\n", strerror(errno));
       n_recv = 0;
@@ -58,15 +58,13 @@ class UDPSocket {
     return ::bind(_fd, &addr, len);
   }
 
-  /// @brief Adds socket to fd_set.
-  /// @param set fd_set to be used.
-  void set(fd_set &set) { FD_SET(_fd, &set); }
+  /// @return Socket's file descriptor.
+  int fd() { return _fd; }
 
-  /// @brief Checks if socket is active.
-  /// @param set fd_set to be used.
-  bool isSet(const fd_set &set) { return FD_ISSET(_fd, &set); }
-
-  ~UDPSocket() { close(_fd); }
+  ~UDPSocket() {
+    DEBUG("UDP Socket was closed.\n");
+    close(_fd);
+  }
 };
 
 #endif  // UDPSOCKET_HPP_

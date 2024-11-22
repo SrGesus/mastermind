@@ -48,15 +48,13 @@ class TCPSocket {
     return ::bind(_fd, &addr, len);
   }
 
-  /// @brief Adds socket to fd_set.
-  /// @param set fd_set to be used.
-  void set(fd_set &set) { FD_SET(_fd, &set); }
+  /// @return Socket's file descriptor.
+  int fd() { return _fd; }
 
-  /// @brief Checks if socket is active.
-  /// @param set fd_set to be used.
-  bool isSet(const fd_set &set) { return FD_ISSET(_fd, &set); }
-
-  ~TCPSocket() { close(_fd); }
+  ~TCPSocket() {
+    DEBUG("TCP Socket was closed.\n");
+    close(_fd);
+  }
 };
 
 #endif  // TCPSOCKET_HPP_

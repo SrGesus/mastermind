@@ -46,8 +46,8 @@ class Trial {
     char &nB = _trial[NUMBER_COLORS * 2] = '0';
     _trial[NUMBER_COLORS * 2 + 1] = ' ';
     char &nW = _trial[(NUMBER_COLORS + 1) * 2] = '0';
-    for (int i = 0; i < NUMBER_COLORS; i++) {
-      for (int j = 0; j < NUMBER_COLORS; j++) {
+    for (size_t i = 0; i < NUMBER_COLORS; i++) {
+      for (size_t j = 0; j < NUMBER_COLORS; j++) {
         bool isWhite = false;
         if (_trial[i * 2] == code._trial[j * 2]) {
           if (i == j) {
@@ -68,7 +68,7 @@ class Trial {
   /// @return Whether trial is a valid combination of colors.
   bool isValid() {
     // Colors must be those listed
-    for (int i = 0; i < NUMBER_COLORS; i++) {
+    for (size_t i = 0; i < NUMBER_COLORS; i++) {
       switch (_trial[i * 2]) {
         case Color::red:
         case Color::green:
@@ -82,7 +82,7 @@ class Trial {
       }
     }
     // Colors should be separated by spaces
-    for (int i = 0; i < NUMBER_COLORS - 1; i++) {
+    for (size_t i = 0; i < NUMBER_COLORS - 1; i++) {
       if (_trial[i * 2 + 1] != ' ') {
         return false;
       }

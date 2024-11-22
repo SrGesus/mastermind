@@ -16,4 +16,7 @@ const int BUFFER_SIZE = 128;
 /// @brief This macro is for anomalies that might be safely ignored.
 #define WARN(...) fprintf(stderr, "[Warn]: " __VA_ARGS__)
 
+/// @brief This macro is for verbose information.
+#define DEBUG(...) fprintf(stderr, "[Debug]: " __VA_ARGS__)
+
 #endif  // UTILS_HPP_

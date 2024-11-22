@@ -64,6 +64,11 @@ class TCPConnection {
       }
     } while (n != 0);
   }
+
+  ~TCPConnection() {
+    DEBUG("TCP Connection was closed.\n");
+    close(_fd);
+  }
 };
 
 #endif  // TCPCONNECTION_HPP_
