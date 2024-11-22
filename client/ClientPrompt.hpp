@@ -52,9 +52,9 @@ class ClientPrompt {
 
  private:
   UDPClient _udpClient;
-  bool playing = false;
+  bool _playing = false;
   static const int PLID_SIZE = 6;
-  char PLID[PLID_SIZE];
+  int _plid;
 
  public:
   ClientPrompt(const char *ip, const char *port) : _udpClient(ip, port) {}
@@ -71,35 +71,31 @@ class ClientPrompt {
   int handleStart(const char *args) {
     char req[20];
 
-    quit();
+    quit();  // Quit game if player is currently playing one
 
-    strcpy(req, "SNG ");
-
-    for (int i = 0; i < PLID_SIZE; i++) {
-      if (!isdigit(args[i])) {
-        DEBUG("INVALID PLID: %c is not a digit\n", args[i]);
-        printStartUsage();
-        return 0;
-      }
-      PLID[i] = args[i];
-      (req + 4)[i] = args[i];
-    }
-    if (args[PLID_SIZE] != ' ') {
+    int _plid, maxTime;
+    char space, newLine;
+    if (sscanf(args, "%6d%c%3d%c", &_plid, &space, &maxTime, &newLine) != 4 ||
+        space != ' ' || newLine != '\n') {
       printStartUsage();
       return 0;
     }
 
-    char *pEnd;
-    int maxTime = strtol(args + PLID_SIZE + 1, &pEnd, 10);
-    if (maxTime > 600 || maxTime < 1 || pEnd - (args + PLID_SIZE + 1) > 3 ||
-        pEnd[0] != '\n') {
-      DEBUG("INVALID max_playtime: %s", args + PLID_SIZE + 1);
+    if (_plid < 1 || _plid > 999999) {
+      DEBUG("INVALID PLID: %d\n", _plid);
       printStartUsage();
       return 0;
     }
-    strncpy(req + 4 + PLID_SIZE, args + PLID_SIZE, 6);
 
-    playing = true;
+    if (maxTime < 1 || maxTime > 600) {
+      DEBUG("INVALID max_playtime: %d\n", maxTime);
+      printStartUsage();
+      return 0;
+    }
+
+    sprintf(req, "SNG %06d %03d\n", _plid, maxTime);
+
+    _playing = true;
 
     DEBUG("Sending via UDP: %s", req);
 
@@ -121,12 +117,21 @@ class ClientPrompt {
   }
 
   void quit() {
-    char req[50];
+    if (_playing) {
+      char req[50];
+      sprintf(req, "QUT %06d\n", _plid);
+      const char *resp = _udpClient.runCommand(req);
 
-    if (playing) {
-      memcpy(req, "QUT ", 4);
-      memcpy(req + 4, PLID, PLID_SIZE);
-      req[4 + PLID_SIZE] = '\n';
+      char c1, c2, c3, c4;
+
+      if (sscanf(resp, "RQT OK %c %c %c %c\n", &c1, &c2, &c3, &c4) == 4) {
+        // TODO: End Game Message
+        _playing = false;
+      }
+
+      if (strcmp(resp, "RQT NOK\n")) {  // Game might already have ended.
+        _playing = false;
+      }
     }
   }
 

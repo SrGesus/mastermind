@@ -6,6 +6,8 @@
 /// @todo Revisit this value
 const int BUFFER_SIZE = 128;
 
+bool utils_debug_flag = false;
+
 /// @brief This macro is for fatal errors that cannot be recovered from.
 #define ERROR(...)                            \
   {                                           \
@@ -17,6 +19,9 @@ const int BUFFER_SIZE = 128;
 #define WARN(...) fprintf(stderr, "[Warn]: " __VA_ARGS__)
 
 /// @brief This macro is for verbose information.
-#define DEBUG(...) fprintf(stderr, "[Debug]: " __VA_ARGS__)
+#define DEBUG(...)                                                  \
+  {                                                                 \
+    if (utils_debug_flag) fprintf(stderr, "[Debug]: " __VA_ARGS__); \
+  }
 
 #endif  // UTILS_HPP_
