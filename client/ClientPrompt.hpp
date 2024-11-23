@@ -6,11 +6,11 @@
 #include <string.h>
 
 #include <client/UDPClient.hpp>
+#include <common/Trial.hpp>
 
-#define CASE(X)                                                    \
-  case CommandSum::X:                                              \
-    status = strcmp(buffer, CommandStr::X) ? -1 : handle##X(args); \
-    break;
+#define CASE(X)       \
+  case CommandSum::X: \
+    return strcmp(buffer, CommandStr::X) ? -1 : handle##X(args);
 
 static constexpr unsigned int csum(const char *str) {
   return str[0] + (str[0] != '\0' ? csum(str + 1) : 0);
@@ -50,18 +50,20 @@ class ClientPrompt {
     TCP = csum(CommandStr::TCP),
   };
 
+  static const int PLID_SIZE = 6;
+
  private:
   UDPClient _udpClient;
   bool _playing = false;
-  static const int PLID_SIZE = 6;
   int _plid;
+  int _nT;
 
  public:
   ClientPrompt(const char *ip, const char *port) : _udpClient(ip, port) {}
 
   void printStartUsage() {
     printf(
-        "\nInvalid syntax for \"start\" command.\n\n"
+        "Invalid syntax for \"start\" command.\n\n"
         "Usage: start PLID max_playtime\n"
         "\tPLID - 6 digit Player Identification number.\n"
         "\tmax_playtime - time limit in seconds, must not be greater than "
@@ -69,39 +71,142 @@ class ClientPrompt {
   }
 
   int handleStart(const char *args) {
-    char req[20];
+    char req[32];
 
-    quit();  // Quit game if player is currently playing one
-
-    int _plid, maxTime;
+    int plid, maxTime;
     char space, newLine;
-    if (sscanf(args, "%6d%c%3d%c", &_plid, &space, &maxTime, &newLine) != 4 ||
+    if (sscanf(args, "%6d%c%3d%c", &plid, &space, &maxTime, &newLine) != 4 ||
         space != ' ' || newLine != '\n') {
       printStartUsage();
-      return 0;
+      return -1;
     }
 
-    if (_plid < 1 || _plid > 999999) {
-      DEBUG("INVALID PLID: %d\n", _plid);
+    if (plid < 1 || plid > 999999) {
+      DEBUG("INVALID PLID: %d\n", plid);
       printStartUsage();
-      return 0;
+      return -1;
     }
 
     if (maxTime < 1 || maxTime > 600) {
       DEBUG("INVALID max_playtime: %d\n", maxTime);
       printStartUsage();
-      return 0;
+      return -1;
     }
 
-    sprintf(req, "SNG %06d %03d\n", _plid, maxTime);
-
-    _playing = true;
-
-    DEBUG("Sending via UDP: %s", req);
+    sprintf(req, "SNG %06d %03d\n", plid, maxTime);
 
     const char *resp = _udpClient.runCommand(req);
 
-    DEBUG("Received via UDP: %s", resp);
+    // TODO: Handle responses
+    _playing = true;
+    _nT = 1;
+    _plid = plid;
+
+    return 0;
+  }
+
+  bool validColor(char c) {
+    switch (c) {
+      case Color::red:
+      case Color::green:
+      case Color::blue:
+      case Color::yellow:
+      case Color::orange:
+      case Color::purple:
+        return true;
+      default:  // Invalid color
+        return false;
+    }
+  }
+
+  void printTryUsage() {
+    printf(
+        "Invalid syntax for \"try\" command.\n\n"
+        "Usage: try C1 C2 C3 C4\n"
+        "\tCi - Color of the ith guess.\n");
+    printColors();
+  }
+
+  void printColors() {
+    printf("\nColors:\n");
+    printf("\t%c - Red\n", Color::red);
+    printf("\t%c - Green\n", Color::green);
+    printf("\t%c - Blue\n", Color::blue);
+    printf("\t%c - Yellow\n", Color::yellow);
+    printf("\t%c - Orange\n", Color::orange);
+    printf("\t%c - Purple\n", Color::purple);
+  }
+
+  int handleTry(const char *args) {
+    char req[32];
+    char c1, c2, c3, c4, newLine;
+
+    if (sscanf(args, "%c %c %c %c%c", &c1, &c2, &c3, &c4, &newLine) != 5 ||
+        newLine != '\n' || !validColor(c1) || !validColor(c2) ||
+        !validColor(c3) || !validColor(c4)) {
+      printTryUsage();
+      return -1;
+    }
+
+    if (!_playing) {
+      printf(
+          "There is no game ongoing at the moment.\nPlease start a new "
+          "game with \"start\".\n");
+    }
+
+    sprintf(req, "TRY %06d %c %c %c %c %d\n", _plid, c1, c2, c3, c4, _nT);
+
+    const char *resp = _udpClient.runCommand(req);
+
+    // TODO: Handle responses
+    _nT++;
+
+    return 0;
+  }
+
+  void printDebugUsage() {
+    printf(
+        "Invalid syntax for \"debug\" command.\n\n"
+        "Usage: debug PLID max_playtime C1 C2 C3 C4\n"
+        "\tPLID - 6 digit Player Identification number.\n"
+        "\tmax_playtime - time limit in seconds, must not be greater than "
+        "600.\n"
+        "\tCi - Color of the ith guess for the secret key.\n");
+    printColors();
+  }
+
+  int handleDebug(const char *args) {
+    char req[32];
+
+    int plid, maxTime;
+    char space, newLine, c1, c2, c3, c4;
+    if (sscanf(args, "%6d%c%3d %c %c %c %c%c", &plid, &space, &maxTime, &c1,
+               &c2, &c3, &c4, &newLine) != 8 ||
+        space != ' ' || newLine != '\n') {
+      printDebugUsage();
+      return -1;
+    }
+
+    if (plid < 1 || plid > 999999) {
+      DEBUG("INVALID PLID: %d\n", plid);
+      printDebugUsage();
+      return -1;
+    }
+
+    if (maxTime < 1 || maxTime > 600) {
+      DEBUG("INVALID max_playtime: %d\n", maxTime);
+      printDebugUsage();
+      return -1;
+    }
+
+    sprintf(req, "DBG %06d %03d %c %c %c %c\n", plid, maxTime, c1, c2, c3, c4);
+
+    const char *resp = _udpClient.runCommand(req);
+
+    // TODO: Handle responses
+    _playing = true;
+    _nT = 1;
+    _plid = plid;
 
     return 0;
   }
@@ -120,16 +225,14 @@ class ClientPrompt {
     if (_playing) {
       char req[50];
       sprintf(req, "QUT %06d\n", _plid);
+
       const char *resp = _udpClient.runCommand(req);
 
       char c1, c2, c3, c4;
-
       if (sscanf(resp, "RQT OK %c %c %c %c\n", &c1, &c2, &c3, &c4) == 4) {
         // TODO: End Game Message
         _playing = false;
-      }
-
-      if (strcmp(resp, "RQT NOK\n")) {  // Game might already have ended.
+      } else if (strcmp(resp, "RQT NOK\n")) {  // Game might already have ended.
         _playing = false;
       }
     }
@@ -154,31 +257,26 @@ class ClientPrompt {
     int e = strcspn(buffer, " \n");
     buffer[e] = '\0';
 
-    int status = 0;
     const char *args = buffer + e + 1;
     switch (checksum(buffer)) {
       CASE(Start)
-      // CASE(Try)
+      CASE(Try)
       // CASE(ShowTrials)
       // CASE(St)
       // CASE(Scoreboard)
       // CASE(Sb)
       CASE(Quit)
       CASE(Exit)
-      // CASE(Debug)
+      CASE(Debug)
       CASE(UDP)
       // CASE(TCP)
       default:  // Unknown command
-        status = -1;
-        break;
+        WARN("Unrecognized command: %s\n", buffer);
+        return -1;
     }
-    if (status == -1) WARN("Unrecognized command: %s\n", buffer);
-    return status;
   }
 
   int handleUDP(const char *args) {
-    DEBUG("Sending via UDP: %s", args);
-
     const char *resp = _udpClient.runCommand(args);
 
     printf("%s", resp);
