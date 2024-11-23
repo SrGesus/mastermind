@@ -14,6 +14,7 @@
 /// connects.
 class TCPConnection {
  private:
+  char _buf[BUFFER_SIZE];
   int _fd;
 
  public:
@@ -25,32 +26,33 @@ class TCPConnection {
     // strerror(errno));
   }
 
+
   /// @brief Will read tcp connection into buffer.
   /// @param buf Buffer to be read.
   /// @param siz buffer size
-  /// @return Null terminated buffer
-  /// @note If unsuccessful will exit(1).
-  void read(char* buf, size_t siz) {
+  /// @return Null terminated buffer. If unsuccessful null pointer.
+  char * read() {
     int n_read = 0, n;
     do {
-      n = ::read(_fd, buf + n_read, siz - n_read);
+      n = ::read(_fd, _buf + n_read, sizeof(_buf) - n_read);
       if (n > 0) n_read += n;
       if (n == -1) {
         if (errno != EINTR) {
           continue;  // Read was interrupted
         }
-        // Exit on other errors.
-        ERROR("Failed to read to TCP Socket: %s\n", strerror(errno));
+        WARN("Failed to read to TCP Socket: %s\n", strerror(errno));
+        return nullptr;
       }
     } while (n != 0);
-    buf[n_read] = '\0';
+    _buf[n_read] = '\0';
+    return _buf;
   }
 
   /// @brief Will write from buffer to tcp connection.
   /// @param buf Contents to be sent, must have at least len chars.
   /// @param len Length to be written.
   /// @note If unsuccessful will exit(1).
-  void write(const char* buf, size_t len) {
+  int write(const char* buf, size_t len) {
     int n_written = 0, n;
     do {
       n = ::write(_fd, buf + n_written, len - n_written);
@@ -59,10 +61,11 @@ class TCPConnection {
         if (errno != EINTR) {
           continue;  // Write was interrupted
         }
-        // Exit on other errors.
-        ERROR("Failed to write to TCP Socket: %s\n", strerror(errno));
+        WARN("Failed to write to TCP Socket: %s\n", strerror(errno));
+        return -1;
       }
     } while (n != 0);
+    return n_written;
   }
 
   ~TCPConnection() {

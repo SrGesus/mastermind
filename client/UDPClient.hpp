@@ -8,9 +8,8 @@
 #include <string.h>
 #include <sys/socket.h>
 
-#include <client/UDPClientParser.hpp>
+//
 #include <common/UDPSocket.hpp>
-#include <utility>
 
 const char *ERR_RESPONSE = "ERR\n";
 
@@ -70,15 +69,20 @@ class UDPClient {
           retries++;
           continue;
         case -1:  // Unexpected Error
-          ERROR("Could not get reply from server: %s\n", strerror(errno));
+          DEBUG("Could not get reply from server: %s\n", strerror(errno));
+          return ERR_RESPONSE;
         default:  // Handle message
           char *resp = _socket.recvfrom(nullptr, nullptr);
+          if (resp == nullptr) {  // Unexpected Error
+            DEBUG("Could not get reply from server: %s\n", strerror(errno));
+            return ERR_RESPONSE;
+          }
           DEBUG("Received via UDP: %s", resp);
           return resp;
       }
     }
-    WARN("Could not get reply from server: Maximum retries (%d) exceeded.\n",
-         MAX_RETRIES);
+    DEBUG("Could not get reply from server: Maximum retries (%d) exceeded.\n",
+           MAX_RETRIES);
     return ERR_RESPONSE;
   }
 

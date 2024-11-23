@@ -26,12 +26,13 @@ class UDPSocket {
   /// @param in Null-terminated data to be sent.
   /// @param addr Socket address.
   /// @param addrlen Socket address length.
-  /// @note If unsuccessful will print a warning.
-  void sendto(const char *in, const sockaddr &addr, socklen_t addrlen) {
+  /// @return Returns the number sent, or -1 for errors.
+  int sendto(const char *in, const sockaddr &addr, socklen_t addrlen) {
     size_t n = strlen(in);
     ssize_t n_sent = ::sendto(_fd, in, n, 0, &addr, addrlen);
     if (n_sent == -1)
-      WARN("UDP Failed to send %zu bytes: %s\n", n, strerror(errno));
+      DEBUG("UDP Failed to send %zu bytes: %s\n", n, strerror(errno));
+    return n_sent;
   }
 
   /// @brief Receives message and retrieves the address of the sender.
@@ -42,8 +43,8 @@ class UDPSocket {
     ssize_t n_recv =
         ::recvfrom(_fd, _buf, BUFFER_SIZE - 1, 0, (sockaddr *)addr, addrlen);
     if (n_recv == -1) {
-      WARN("UDP Failed to receive bytes: %s\n", strerror(errno));
-      n_recv = 0;
+      DEBUG("UDP Failed to receive bytes: %s\n", strerror(errno));
+      return nullptr;
     }
     _buf[n_recv] = '\0';
     return _buf;

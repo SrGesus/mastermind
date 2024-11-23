@@ -24,11 +24,17 @@ class TCPSocket {
 
   TCPConnection connect(const sockaddr &addr, socklen_t len) {
     int new_fd = ::connect(_fd, &addr, len);
+    if (new_fd == -1) {
+      WARN("Failed to create TCP connection to server: %s\n", strerror(errno));
+    }
     return TCPConnection(new_fd);
   }
 
   TCPConnection accept(sockaddr &addr, socklen_t &len) {
     int new_fd = ::accept(_fd, &addr, &len);
+    if (new_fd == -1) {
+      WARN("Failed to create TCP connection to server: %s\n", strerror(errno));
+    }
     return TCPConnection(new_fd);
   }
 
