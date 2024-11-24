@@ -33,6 +33,8 @@ class Trial {
     _trial[n] = '\0';
   }
 
+  Trial() { memset(_trial, 0, sizeof(_trial)); }
+
   /// @return String representation of trial C1 C2 C3 C4 [nB nW]
   const char *getTrial() { return _trial; }
   /// @return String representation of results nB nW
