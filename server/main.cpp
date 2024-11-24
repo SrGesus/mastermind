@@ -1,8 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "UDPServer.hpp"
-#include "UDPServerParser.hpp"
+#include "server/UDPServer.hpp"
+#include "server/UDPServerParser.hpp"
+#include "server/GameStorage.hpp"
 
 const char *DEFAULT_IP = "localhost";
 const char *DEFAULT_PORT = "58000"; 
@@ -22,8 +23,9 @@ int main(int argc, char **argv) {
         }
     }
 
+    GameStorage sessions = GameStorage();
     UDPServer s = UDPServer(ip, port);
-    UDPServerParser parser = UDPServerParser();
+    UDPServerParser parser = UDPServerParser(&sessions);
 
     while (1) {s.processRequest(parser);}
 
