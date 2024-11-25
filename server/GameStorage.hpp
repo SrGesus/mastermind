@@ -13,10 +13,12 @@ class GameStorage {
         }
 
         void startSession(int plid, int maxTime) {
+            _sessions.erase(plid);
             _sessions[plid] = GameSession(plid, maxTime);
         }
 
         void startSession(int plid, int maxTime, char code[8]) {
+            _sessions.erase(plid);
             _sessions[plid] = GameSession(plid, maxTime, code);
         }
 
@@ -33,6 +35,7 @@ class GameStorage {
             if (scoreboard.size() > 10) {
                 scoreboard.resize(10);
             }
+            return scoreboard;
         }
 
     private:
