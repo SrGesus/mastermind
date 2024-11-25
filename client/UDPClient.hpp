@@ -66,6 +66,7 @@ class UDPClient {
       // Wait for socket to be readable.
       switch (select(_socket.fd() + 1, &set, nullptr, nullptr, &timeout)) {
         case 0:  // Timed out
+          DEBUG("Timed out waiting for UDP server response, retrying...\n");
           retries++;
           continue;
         case -1:  // Unexpected Error
@@ -86,7 +87,10 @@ class UDPClient {
     return ERR_RESPONSE;
   }
 
-  ~UDPClient() { freeaddrinfo(this->_res); }
+  ~UDPClient() { 
+    DEBUG("UDP Client was destroyed.\n");
+    freeaddrinfo(this->_res);
+  }
 };
 
 #endif  // UDPCLIENT_HPP_

@@ -93,7 +93,7 @@ class ClientPrompt {
       return -1;
     }
 
-    sprintf(req, "SNG %06d %03d\n", plid, maxTime);
+    snprintf(req, sizeof(req), "SNG %06d %03d\n", plid, maxTime);
 
     const char *resp = _udpClient.runCommand(req);
 
@@ -154,7 +154,8 @@ class ClientPrompt {
           "game with \"start\".\n");
     }
 
-    sprintf(req, "TRY %06d %c %c %c %c %d\n", _plid, c1, c2, c3, c4, _nT);
+    snprintf(req, sizeof(req), "TRY %06d %c %c %c %c %d\n", _plid, c1, c2, c3,
+             c4, _nT);
 
     const char *resp = _udpClient.runCommand(req);
 
@@ -199,7 +200,8 @@ class ClientPrompt {
       return -1;
     }
 
-    sprintf(req, "DBG %06d %03d %c %c %c %c\n", plid, maxTime, c1, c2, c3, c4);
+    snprintf(req, sizeof(req), "DBG %06d %03d %c %c %c %c\n", plid, maxTime, c1,
+             c2, c3, c4);
 
     const char *resp = _udpClient.runCommand(req);
 
@@ -224,7 +226,7 @@ class ClientPrompt {
   void quit() {
     if (_playing) {
       char req[50];
-      sprintf(req, "QUT %06d\n", _plid);
+      snprintf(req, sizeof(req), "QUT %06d\n", _plid);
 
       const char *resp = _udpClient.runCommand(req);
 
