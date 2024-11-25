@@ -26,10 +26,11 @@ class UDPServerParser {
   }
   // 
   bool validCode(const char *code) {
+    printf("validCode: %s\n", code);
     if (strlen(code) != 7) {
       return false;
     }
-    for (size_t i = 0; i < 4; i++) {
+    for (size_t i = 0; i < 7; i+=2) {
       if (!validColor(code[i])) {
         return false;
       }
@@ -63,17 +64,32 @@ class UDPServerParser {
       int plid, nT, res;
       GameSession *game;
       char guess[8];
+      memset(guess, ' ', sizeof(guess));
+      guess[7] = '\0';
 
-      if ((sscanf(req, "TRY %06d %s %nT\n", &plid, &guess, &nT) != 2) || (plid < 1 || plid > 999999) or (strlen(guess) != 7)) {
+      if ((sscanf(req, "TRY %06d %c %c %c %c %d\n", &plid, &guess[0], &guess[2], &guess[4], &guess[6], &nT) != 6) || (plid < 1 || plid > 999999)) {
         sprintf(_buf, "RTR ERR\n");
+      }
+      /// horrible naming btw
+      game = _sessions->getPLIDSession(plid);
+      printf("game: %p\n", game);
+      if (game == NULL || !game->_playing) {
+        sprintf(_buf, "RTR NOK\n");
+        return _buf;
+      }
+
+      if (nT < 1 || nT > 8) {
+        sprintf(_buf, "RTR INV\n");
+        return _buf;
       }
 
       Trial t = Trial(guess, 7);
-      if (!t.isValid()) sprintf(_buf, "RTR ERR\n");
+      if (!t.isValid()){
+        sprintf(_buf, "RTR ERR\n");
+        return _buf;
+      }
 
-      /// horrible naming btw
-      game = _sessions->getPLIDSession(plid);
-      if (game == NULL || !game->_playing) sprintf(_buf, "RTR ERR\n");
+
 
       res = _sessions->getPLIDSession(plid)->executeTrial(t, nT-1);
 
@@ -82,16 +98,19 @@ class UDPServerParser {
           sprintf(_buf, "RTR OK %d %d %d %s\n", nT, 4, 0, guess);
           break;
         case GameSession::TrialResult::PLAYING:
-          sprintf(_buf, "RTR OK %d %d %d %s\n", nT, game->_trials[nT-1].getnBnW()[0], game->_trials[nT-1].getnBnW()[2], guess);
+        // was segfaulting here because nt was actually pid
+          sprintf(_buf, "RTR OK %d %s %s\n", nT, game->_trials[nT-1].getnBnW(), guess);
           break;
-        case GameSession::TrialResult::INV:
+        case GameSession::TrialResult::DUPLICATE:
+          sprintf(_buf, "RTR DUP\n");
+        case GameSession::TrialResult::INVALID:
           sprintf(_buf, "RTR INV\n");
           break;
         case GameSession::TrialResult::TIMEOUT:
           sprintf(_buf, "RTR ETM %s\n", game->_code.getTrial());
           break;
         case GameSession::TrialResult::LOSS:
-          sprintf(_buf, "RTR ENT %d %d %d %s\n", nT, game->_trials[nT-1].getnBnW()[0], game->_trials[nT-1].getnBnW()[2], game->_code.getTrial());
+          sprintf(_buf, "RTR ENT %d %s %s\n", nT, game->_trials[nT-1].getnBnW(), game->_code.getTrial());
           break;
       }
     }
@@ -107,8 +126,11 @@ class UDPServerParser {
     if (strncmp(req, "DBG", 3) == 0) {
       int plid, maxTime;
       char key[8];
+      memset(key, ' ', sizeof(key));
+      key[7] = '\0';
 
-      if ((sscanf(req, "DBG %06d %03d %s\n", &plid, &maxTime, &key) != 4) || (plid < 1 || plid > 999999 || maxTime < 1 || maxTime > 600) || !validCode(key)) {
+      if ((sscanf(req, "DBG %06d %03d %c %c %c %c\n", &plid, &maxTime, &key[0], &key[2], &key[4], &key[6]) != 6) || (plid < 1 || plid > 999999 || maxTime < 1 || maxTime > 600) || !validCode(key)) {
+        printf(key);
         sprintf(_buf, "RDB ERR\n");
         return _buf;
       }
@@ -122,9 +144,6 @@ class UDPServerParser {
       return _buf;
 
     }
-
-    WARN("Request: %s\n", req);
-    WARN("Return: %s\n", _buf);
     return _buf;
   }
 
