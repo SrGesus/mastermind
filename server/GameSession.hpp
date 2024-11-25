@@ -16,7 +16,8 @@ class GameSession{
     enum TrialResult{
         WIN = 1,
         PLAYING = 0,
-        INV = -3,
+        DUPLICATE = -4,
+        INVALID = -3,
         TIMEOUT = -2,
         LOSS = -1
     };
@@ -82,17 +83,20 @@ class GameSession{
     /// @return result of the attempt
     int executeTrial(Trial trial, int nT){
         bool result = trial.evaluateNumbers(_code);
-
-        // check if trial has been played before
-        for(int i = 0; i <= _nT; i++){
-            if(strcmp(trial.getTrial(), _trials[i].getTrial()) == 0){
-                return PLAYING;
-            }
+        // check if trial is a repeat
+        if(nT == _nT -1 && _trials[nT].getTrial() == trial.getTrial()){
+            return PLAYING; // regular reply without trial number increase
         }
 
         // check if trial is invalid
-        if (nT<_nT || (nT = _nT && strcmp(trial.getTrial(), _trials[nT].getTrial()) != 0)){
-            return INV;
+        if (nT != _nT){ // trial number is not expected or a reapeat with wrong info
+            return INVALID;
+        }
+
+        for (int i = 0; i <= nT; i++){
+            if(_trials[i].getTrial() == trial.getTrial()){
+                return DUPLICATE;
+            }
         }
 
         // check if there is still time left
