@@ -12,11 +12,11 @@ int main(int argc, char **argv) {
     const char *ip = DEFAULT_IP;
     const char *port = DEFAULT_PORT;
 
-    int verbose_flag = 0;
+    bool verbose_flag = false;;
 
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-p") == 0) port = argv[++i];
-        else if (strcmp(argv[i], "-v") == 0) { verbose_flag = 1;
+        else if (strcmp(argv[i], "-v") == 0) { verbose_flag = true;
         } else {
             fprintf(stderr, "Usage: %s [-p port] [-v]\n", argv[0]);
             return 1;
@@ -24,7 +24,7 @@ int main(int argc, char **argv) {
     }
 
     GameStorage sessions = GameStorage();
-    UDPServer s = UDPServer(ip, port);
+    UDPServer s = UDPServer(ip, port, verbose_flag);
     UDPServerParser parser = UDPServerParser(&sessions);
 
     while (1) {s.processRequest(parser);}

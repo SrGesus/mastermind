@@ -6,6 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <arpa/inet.h> // HMMMM
 
 #include <common/UDPSocket.hpp>
 #include <server/UDPServerParser.hpp>
@@ -13,13 +14,17 @@
 class UDPServer {
  private:
   UDPSocket _socket;
+  bool verbose_flag;
 
  public:
+  #define VERBOSE(...) if (verbose_flag) fprintf(stdout, "[Verbose]: " __VA_ARGS__);  
+
   /// @brief Creates an UDP socket bound to provided ip. Will exit(1) if
   /// unsuccessful.
   /// @param ip Ip to be bound. Can be null.
   /// @param port Port to be bound. Must not be null.
-  UDPServer(const char *ip, const char *port) : _socket() {
+  /// @param verbose_flag If true, will print debug messages.
+  UDPServer(const char *ip, const char *port, bool verbose_flag) : _socket(), verbose_flag(verbose_flag) {
     struct addrinfo hints, *res = nullptr;
     int errcode;
 
@@ -46,6 +51,12 @@ class UDPServer {
     struct sockaddr_in addr;
 
     const char *result = _socket.recvfrom(&addr, &addrlen);
+
+    char ip[INET_ADDRSTRLEN]; // HMMMM
+    inet_ntop(AF_INET, &(addr.sin_addr), ip, INET_ADDRSTRLEN);
+    int port = ntohs(addr.sin_port);
+
+    VERBOSE("Received %s from %s:%d\n", result, ip, port);
 
     result = parser.executeRequest(result);
 

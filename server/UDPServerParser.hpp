@@ -7,7 +7,7 @@
 #include <string.h>
 
 class UDPServerParser {
- private:
+  private:
   char _buf[BUFFER_SIZE];
   GameStorage *_sessions;
 
@@ -39,18 +39,15 @@ class UDPServerParser {
   }
 
 
- public:
-  UDPServerParser(GameStorage *sessions) : _sessions(sessions) {}
+  public:
+  UDPServerParser(GameStorage *sessions) : _sessions(sessions)  {}
 
-  const char *executeRequest(const char *req) { 
+  const char *executeRequest(const char *req) {
     if (strncmp(req, "SNG", 3) == 0) {
       int plid, maxTime;
       if ((sscanf(req, "SNG %06d %03d\n", &plid, &maxTime) != 2) || (plid < 1 || plid > 999999 || maxTime < 1 || maxTime > 600)) {
         sprintf(_buf, "RSG ERR\n");
-        return _buf;
-      }
-      
-      if (_sessions->getPLIDSession(plid)->_playing) {
+      } else if (_sessions->getPLIDSession(plid)->_playing) {
         sprintf(_buf, "RSG NOK\n");
       } else {
         _sessions->startSession(plid, maxTime);
@@ -148,5 +145,6 @@ class UDPServerParser {
   }
 
 };
+
 
 #endif  // UDPSERVERPARSER_HPP_
