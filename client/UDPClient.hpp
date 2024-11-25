@@ -33,7 +33,7 @@ class UDPClient {
     hints.ai_family = AF_INET;       // IPv4
     hints.ai_socktype = SOCK_DGRAM;  // UDP socket
 
-    errcode = getaddrinfo(ip, port, &hints, &this->_res);
+    errcode = getaddrinfo(ip, port, &hints, &_res);
     if (errcode != 0) {
       ERROR("Failed to translate address %s:%s: %s\n",
             ip != nullptr ? ip : "0.0.0.0", port, gai_strerror(errcode));

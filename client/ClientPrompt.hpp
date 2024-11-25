@@ -96,6 +96,7 @@ class ClientPrompt {
     snprintf(req, sizeof(req), "SNG %06d %03d\n", plid, maxTime);
 
     const char *resp = _udpClient.runCommand(req);
+    (void)resp;
 
     // TODO: Handle responses
     _playing = true;
@@ -158,6 +159,7 @@ class ClientPrompt {
              c4, _nT);
 
     const char *resp = _udpClient.runCommand(req);
+    (void)resp;
 
     // TODO: Handle responses
     _nT++;
@@ -204,6 +206,7 @@ class ClientPrompt {
              c2, c3, c4);
 
     const char *resp = _udpClient.runCommand(req);
+    (void)resp;
 
     // TODO: Handle responses
     _playing = true;
@@ -229,6 +232,7 @@ class ClientPrompt {
       snprintf(req, sizeof(req), "QUT %06d\n", _plid);
 
       const char *resp = _udpClient.runCommand(req);
+      (void)resp;
 
       char c1, c2, c3, c4;
       if (sscanf(resp, "RQT OK %c %c %c %c\n", &c1, &c2, &c3, &c4) == 4) {

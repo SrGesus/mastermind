@@ -127,7 +127,7 @@ class UDPServerParser {
       key[7] = '\0';
 
       if ((sscanf(req, "DBG %06d %03d %c %c %c %c\n", &plid, &maxTime, &key[0], &key[2], &key[4], &key[6]) != 6) || (plid < 1 || plid > 999999 || maxTime < 1 || maxTime > 600) || !validCode(key)) {
-        printf(key);
+        printf("%s\n", key);
         sprintf(_buf, "RDB ERR\n");
         return _buf;
       }

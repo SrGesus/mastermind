@@ -13,13 +13,14 @@ int main(int argc, char **argv) {
   const char *port = DEFAULT_PORT;
 
   bool verbose_flag = false;
-  ;
 
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-p") == 0 && i + 1 < argc)
       port = argv[++i];
     else if (strcmp(argv[i], "-v") == 0) {
       verbose_flag = true;
+    } else if (strcmp(argv[i], "-d") == 0) {
+        utils_debug_flag = true;
     } else {
       fprintf(stderr, "Usage: %s [-p port] [-v]\n", argv[0]);
       return 1;
