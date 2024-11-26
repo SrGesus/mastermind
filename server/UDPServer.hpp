@@ -49,10 +49,9 @@ class UDPServer {
   }
 
   void processRequest(UDPServerParser &parser) {
-    socklen_t addrlen;
     struct sockaddr_in addr;
-
-    addrlen = sizeof(addr);
+    socklen_t addrlen = sizeof(addr);
+    
     const char *result = _socket.recvfrom(&addr, &addrlen);
 
     char ip[INET_ADDRSTRLEN];  // HMMMM

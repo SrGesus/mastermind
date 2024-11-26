@@ -14,38 +14,33 @@
 /// connects.
 class TCPConnection {
  private:
-  char _buf[BUFFER_SIZE];
   int _fd;
 
  public:
   /// @brief Constructor from fd.
   /// @param fd Socket fd.
-  // /// @note Will exit(1) if fd is -1, so should be on fork.
-  TCPConnection(int fd) : _fd(fd) {
-    // if (fd == -1) ERROR("Failed to create TCP Socket: %s\n",
-    // strerror(errno));
-  }
-
+  TCPConnection(int fd) : _fd(fd) {}
 
   /// @brief Will read tcp connection into buffer.
   /// @param buf Buffer to be read.
   /// @param siz buffer size
   /// @return Null terminated buffer. If unsuccessful null pointer.
-  char * read() {
+  int read(char* buf, size_t siz) {
     int n_read = 0, n;
     do {
-      n = ::read(_fd, _buf + n_read, sizeof(_buf) - n_read);
+      n = ::read(_fd, buf + n_read, siz - n_read);
       if (n > 0) n_read += n;
       if (n == -1) {
         if (errno != EINTR) {
           continue;  // Read was interrupted
         }
         WARN("Failed to read to TCP Socket: %s\n", strerror(errno));
-        return nullptr;
+        buf[0] = '\0';
+        return -1;
       }
     } while (n != 0);
-    _buf[n_read] = '\0';
-    return _buf;
+    buf[n_read] = '\0';
+    return 0;
   }
 
   /// @brief Will write from buffer to tcp connection.
@@ -68,9 +63,14 @@ class TCPConnection {
     return n_written;
   }
 
+  /// @return Socket's file descriptor.
+  int fd() { return _fd; }
+
   ~TCPConnection() {
-    DEBUG("TCP Connection was closed.\n");
-    close(_fd);
+    if (_fd != -1) {
+      close(_fd);
+      DEBUG("TCP Connection was closed.\n");
+    }
   }
 };
 

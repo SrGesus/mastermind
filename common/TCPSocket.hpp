@@ -22,14 +22,27 @@ class TCPSocket {
     if (_fd == -1) ERROR("Failed to create TCP Socket: %s\n", strerror(errno));
   }
 
-  TCPConnection connect(const sockaddr &addr, socklen_t len) {
-    int new_fd = ::connect(_fd, &addr, len);
-    if (new_fd == -1) {
+  TCPSocket(const TCPSocket &) = delete;
+  TCPSocket &operator=(const TCPSocket &) = delete;
+
+  /// @brief Transforms a tcp socket into a tcp connection.
+  /// @param addr Address to be connected to.
+  /// @param len Length of address struct.
+  /// @return TCP Connection.
+  TCPConnection connect(const sockaddr &addr, socklen_t len) && {
+    int res = ::connect(_fd, &addr, len);
+    if (res == -1) {
       WARN("Failed to create TCP connection to server: %s\n", strerror(errno));
     }
-    return TCPConnection(new_fd);
+    int fd = _fd;
+    _fd = -1; // Prevents destructor from closing socket.
+    return TCPConnection(fd);
   }
 
+  /// @brief Accepts a tcp connection from the listen queue.
+  /// @param addr Reference to address struct in which address will be stored.
+  /// @param addrlen Reference in which address length will be stored.
+  /// @return TCP Connection.
   TCPConnection accept(sockaddr &addr, socklen_t &len) {
     int new_fd = ::accept(_fd, &addr, &len);
     if (new_fd == -1) {
@@ -53,9 +66,6 @@ class TCPSocket {
   int bind(const sockaddr &addr, socklen_t len) {
     return ::bind(_fd, &addr, len);
   }
-
-  /// @return Socket's file descriptor.
-  int fd() { return _fd; }
 
   ~TCPSocket() {
     DEBUG("TCP Socket was closed.\n");

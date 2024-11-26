@@ -8,10 +8,7 @@
 #include <string.h>
 #include <sys/socket.h>
 
-//
 #include <common/UDPSocket.hpp>
-
-const char *ERR_RESPONSE = "ERR\n";
 
 class UDPClient {
  private:
@@ -87,7 +84,7 @@ class UDPClient {
     return ERR_RESPONSE;
   }
 
-  ~UDPClient() { 
+  ~UDPClient() {
     DEBUG("UDP Client was destroyed.\n");
     freeaddrinfo(this->_res);
   }

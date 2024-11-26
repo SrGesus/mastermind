@@ -8,6 +8,8 @@
 #include <client/UDPClient.hpp>
 #include <common/Trial.hpp>
 
+#include "TCPClient.hpp"
+
 #define CASE(X)       \
   case CommandSum::X: \
     return strcmp(buffer, CommandStr::X) ? -1 : handle##X(args);
@@ -54,12 +56,14 @@ class ClientPrompt {
 
  private:
   UDPClient _udpClient;
+  TCPClient _tcpClient;
   bool _playing = false;
   int _plid;
   int _nT;
 
  public:
-  ClientPrompt(const char *ip, const char *port) : _udpClient(ip, port) {}
+  ClientPrompt(const char *ip, const char *port)
+      : _udpClient(ip, port), _tcpClient(ip, port) {}
 
   void printStartUsage() {
     printf(
@@ -275,7 +279,7 @@ class ClientPrompt {
       CASE(Exit)
       CASE(Debug)
       CASE(UDP)
-      // CASE(TCP)
+      CASE(TCP)
       default:  // Unknown command
         WARN("Unrecognized command: %s\n", buffer);
         return -1;
@@ -284,6 +288,13 @@ class ClientPrompt {
 
   int handleUDP(const char *args) {
     const char *resp = _udpClient.runCommand(args);
+
+    printf("%s", resp);
+    return 0;
+  }
+
+  int handleTCP(const char *args) {
+    const char *resp = _tcpClient.runCommand(args);
 
     printf("%s", resp);
     return 0;

@@ -69,7 +69,7 @@ class UDPServerParser {
       }
       /// horrible naming btw
       game = _sessions->getPLIDSession(plid);
-      printf("game: %p\n", game);
+      printf("game: %p\n", (void *)game);
       if (game == NULL || !game->_playing) {
         sprintf(_buf, "RTR NOK\n");
         return _buf;

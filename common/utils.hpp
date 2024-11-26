@@ -8,6 +8,8 @@ const int BUFFER_SIZE = 128;
 
 bool utils_debug_flag = false;
 
+const char *ERR_RESPONSE = "ERR\n";
+
 /// @brief This macro is for fatal errors that cannot be recovered from.
 #define ERROR(...)                            \
   {                                           \

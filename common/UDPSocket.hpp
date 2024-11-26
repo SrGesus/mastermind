@@ -22,6 +22,9 @@ class UDPSocket {
     if (_fd == -1) ERROR("Failed to create UDP Socket: %s\n", strerror(errno));
   }
 
+  UDPSocket(const UDPSocket &) = delete;
+  UDPSocket &operator=(const UDPSocket &) = delete;
+
   /// @brief Sends null-terminated string to provided address.
   /// @param in Null-terminated data to be sent.
   /// @param addr Socket address.
