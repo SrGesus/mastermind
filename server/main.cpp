@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
     } else if (strcmp(argv[i], "-d") == 0) {
         utils_debug_flag = true;
     } else {
-      fprintf(stderr, "Usage: %s [-p port] [-v]\n", argv[0]);
+      fprintf(stderr, "Usage: %s [-p port] [-v] [-d]\n", argv[0]);
       return 1;
     }
   }

@@ -1,7 +1,7 @@
 SRC_DIRS := client common server
 BUILD_DIR := build
 
-CFLAGS := -O3 -pedantic -Wall -std=c++20
+CFLAGS := -pedantic -Wall -std=c++20
 CC := g++
 
 SOURCE := $(wildcard $(addsuffix /*.c, $(SRC_DIRS)) $(addsuffix /*.cpp, $(SRC_DIRS)))

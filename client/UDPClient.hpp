@@ -79,7 +79,7 @@ class UDPClient {
           return resp;
       }
     }
-    DEBUG("Could not get reply from server: Maximum retries (%d) exceeded.\n",
+    WARN("Could not get reply from server: Maximum retries (%d) exceeded.\n",
            MAX_RETRIES);
     return ERR_RESPONSE;
   }

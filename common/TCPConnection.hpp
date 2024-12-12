@@ -24,7 +24,7 @@ class TCPConnection {
   /// @brief Will read tcp connection into buffer.
   /// @param buf Buffer to be read.
   /// @param siz buffer size
-  /// @return Null terminated buffer. If unsuccessful null pointer.
+  /// @return Number of bytes read. If unsucessful -1.
   int read(char* buf, size_t siz) {
     int n_read = 0, n;
     do {
@@ -40,13 +40,13 @@ class TCPConnection {
       }
     } while (n != 0);
     buf[n_read] = '\0';
-    return 0;
+    return n_read;
   }
 
   /// @brief Will write from buffer to tcp connection.
   /// @param buf Contents to be sent, must have at least len chars.
   /// @param len Length to be written.
-  /// @note If unsuccessful will exit(1).
+  /// @return Number of bytes read. If unsucessful -1.
   int write(const char* buf, size_t len) {
     int n_written = 0, n;
     do {

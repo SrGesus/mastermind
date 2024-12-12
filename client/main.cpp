@@ -13,10 +13,16 @@ int main(int argc, char **argv) {
   const char *GSIp = DEFAULT_IP, *GSPort = DEFAULT_PORT;
 
   for (int i = 1; i < argc; i++) {
-    if (strcmp(argv[i], "-n") == 0 && i + 1 < argc) GSIp = argv[i + 1];
-    if (strcmp(argv[i], "-p") == 0 && i + 1 < argc) GSPort = argv[i + 1];
-    if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--debug") == 0)
+    if (strcmp(argv[i], "-n") == 0 && i + 1 < argc)
+      GSIp = argv[++i];
+    else if (strcmp(argv[i], "-p") == 0 && i + 1 < argc)
+      GSPort = argv[++i];
+    else if (strcmp(argv[i], "-d") == 0 || strcmp(argv[i], "--debug") == 0)
       utils_debug_flag = true;
+    else {
+      fprintf(stderr, "Usage: %s [-n ip] [-p port] [-d]\n", argv[0]);
+      exit(1);
+    }
   }
 
   DEBUG("GSPort is %s\n", GSPort);

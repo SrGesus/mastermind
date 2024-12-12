@@ -71,7 +71,7 @@ class TCPClient {
           DEBUG("Could not get reply from server: %s\n", strerror(errno));
           return ERR_RESPONSE;
         default:                               // Handle message
-          if (con.read(_buf, sizeof(_buf))) {  // Unexpected Error
+          if (con.read(_buf, sizeof(_buf)) == -1) {  // Unexpected Error
             DEBUG("Could not get reply from server: %s\n", strerror(errno));
             return ERR_RESPONSE;
           }

@@ -35,7 +35,7 @@ class TCPSocket {
       WARN("Failed to create TCP connection to server: %s\n", strerror(errno));
     }
     int fd = _fd;
-    _fd = -1; // Prevents destructor from closing socket.
+    _fd = -1;  // Prevents destructor from closing socket.
     return TCPConnection(fd);
   }
 
@@ -68,8 +68,10 @@ class TCPSocket {
   }
 
   ~TCPSocket() {
-    DEBUG("TCP Socket was closed.\n");
-    close(_fd);
+    if (_fd > 0) {
+      DEBUG("TCP Socket was closed.\n");
+      close(_fd);
+    }
   }
 };
 
