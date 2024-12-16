@@ -283,6 +283,7 @@ class ClientPrompt {
           "luck next time :(\n",
           c1, c2, c3, c4);
       _playing = false;
+      return -1;
     }
 
     if (sscanf(resp, "RTR ETM %c %c %c %c\n", &c1, &c2, &c3, &c4) == 4) {
@@ -291,6 +292,7 @@ class ClientPrompt {
           "luck next time :(\n",
           c1, c2, c3, c4);
       _playing = false;
+      return -1;
     }
 
     if (strcmp(resp, "RTR INV\n") == 0 || strcmp(resp, "RTR NOK\n") == 0) {
@@ -342,6 +344,8 @@ class ClientPrompt {
       }
       fprintf(f, "%s", resp + pos);
       fclose(f);
+      fprintf(stdout, "%s", resp + pos);
+      fprintf(stdout, "Trials were written to file: %s\n", fname);
 
       return 0;
     }
@@ -350,6 +354,39 @@ class ClientPrompt {
     return -1;
   }
 
+  /* --------------------------- Scoreboard ------------------------------ */
+  int handleSb(const char *args) { return handleScoreboard(args); }
+
+  int handleScoreboard(const char *args) {
+    char req[32];
+
+    snprintf(req, sizeof(req), "SSB\n");
+
+    const char *resp = _tcpClient.runCommand(req);
+
+    char fname[32], fsize[32];
+    int pos;
+    if (sscanf(resp, "RSS OK %s %s %n", fname, fsize, &pos) == 2) {
+      FILE *f;
+      // Files on parent directories are not to be touched
+      if (strstr(fname, "..") != nullptr ||
+          (f = fopen(fname, "w")) == nullptr) {
+        WARN("Failed to open file \"%s\" for saving: %s\n", fname,
+             strerror(errno));
+        return -1;
+      }
+      fprintf(f, "%s", resp + pos);
+      fclose(f);
+      fprintf(stdout, "%s", resp + pos);
+      fprintf(stdout, "Scoreboard was written to file: %s\n", fname);
+
+      return 0;
+    }
+
+    printf("Could not show trials for plid: \"%06d\"\n", _plid);
+    return -1;
+  }
+  
   int handleExit(const char *args) {
     quit();
     return 1;
@@ -404,8 +441,8 @@ class ClientPrompt {
       CASE(Try)
       CASE(ShowTrials)
       CASE(St)
-      // CASE(Scoreboard)
-      // CASE(Sb)
+      CASE(Scoreboard)
+      CASE(Sb)
       CASE(Quit)
       CASE(Exit)
       CASE(Debug)

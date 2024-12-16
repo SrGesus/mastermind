@@ -66,8 +66,10 @@ class UDPSocket {
   int fd() { return _fd; }
 
   ~UDPSocket() {
-    DEBUG("UDP Socket was closed.\n");
-    close(_fd);
+    if (_fd > 0) {
+      DEBUG("UDP Socket was closed.\n");
+      close(_fd);
+    }
   }
 };
 
