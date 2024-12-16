@@ -2,127 +2,180 @@
 #define GAMESESSION_HPP_
 
 #include <time.h>
+
 #include <cstdlib>
-#include <common/Trial.hpp>
-#include <common/utils.hpp>
 
-class GameSession{
-    public:
-        int _plid, _time, _nT, _score, _startTime;
-        bool _playing;
-        Trial _code;
-        Trial _trials[8];
-    
-    enum TrialResult{
-        WIN = 1,
-        PLAYING = 0,
-        DUPLICATE = -4,
-        INVALID = -3,
-        TIMEOUT = -2,
-        LOSS = -1
-    };
+#include "Trial.hpp"
 
-    GameSession() : _plid(0), _time(0), _nT(0), _score(0), _startTime(0), _playing(false) {
-        srand(time(NULL));
+/// @brief Class that represents a Game Session in 32 bytes.
+class GameSession {
+ public:
+  /// @brief Result of a trial.
+  enum TrialResult : uint8_t {
+    // ERR
+    ERROR,
+    // NOK
+    QUIT,
+    // DUP
+    DUPLICATE,
+    // INV
+    INVALID,
+    // ETM
+    TIMEOUT,
+    // ENT
+    LOSS,
+    // OK
+    WIN,
+    // OK
+    PLAYING
+  };
+
+ private:
+  /// @brief Maximum number of guesses that can be made in a game.
+  static constexpr int TRIALS_NUMBER = 8;
+
+  time_t _startTime = 0;
+  uint16_t _maxTime : 10 = 0;
+  uint16_t _nT : 4 = 1;
+  uint8_t _debug : 1 = false;
+  uint8_t _score : 7 = 0;
+  TrialResult _lastResult = ERROR;
+  Trial _code;
+  Trial _trials[TRIALS_NUMBER];
+
+  /// @brief Getter for trial
+  /// @param nT Trial number
+  /// @return Trial
+  Trial &getTrial(int nT) { return _trials[nT - 1]; }
+
+ public:
+  /// @brief Default constructor. Resets seed on random number generator.
+  GameSession() { srand(time(NULL)); }
+
+  /// @brief Method that creates a session with a given secret code.
+  /// @param maxTime Session time limit.
+  /// @param code Secret Code to be used.
+  /// @return New Session.
+  static GameSession newDebugGame(int maxTime, Trial code) {
+    GameSession session;
+    session._startTime = time(NULL);
+    session._maxTime = maxTime;
+    session._debug = true;
+    session._lastResult = PLAYING;
+    session._code = code;
+    return session;
+  }
+
+  /// @brief Method that creates a session with a random secret code.
+  /// @param maxTime Session time limit.
+  /// @return New Session.
+  static GameSession newGame(int maxTime) {
+    GameSession session = newDebugGame(maxTime, Trial::random());
+    session._debug = false;
+    return session;
+  }
+
+  /// @brief Getter for trial
+  /// @param nT Trial number
+  /// @return Trial
+  const Trial &getTrial(int nT) const { return _trials[nT - 1]; }
+
+  const Trial &getCode() const { return _code; }
+
+  /// @brief Attempts to execute a trial
+  /// @param trial To be executed.
+  /// @param nT Integer between 1 and 8 representing the trial number.
+  /// @param nB Reference where number of Blacks will be written.
+  /// @param nW Reference where number of Whites will be written.
+  /// @note nB and nW is only written if WIN/LOSS/PLAYING is returned.
+  /// @return Result of the attempt.
+  TrialResult executeTrial(Trial &trial, int nT, uint16_t &nB, uint16_t &nW) {
+    // Check is trial number is within bounds and trial is well formed.
+    if (nT < 1 || nT > TRIALS_NUMBER || !trial.isValid()) {
+      return ERROR;
     }
 
-    GameSession(int plid, int maxTime, char code[8]){
-        _plid = plid;
-        _time = maxTime;
-        _nT = 0;
-        _score = 0;
-        _playing = true;
-        _startTime = time(NULL);
-        _code = Trial(code, 7);
-        srand(time(NULL));
+    DEBUG(
+        "Attemping trial %c %c %c %c, nT=%d, _lastResult=%d, Secret (%c %c %c "
+        "%c)\n",
+        trial.c1(), trial.c2(), trial.c3(), trial.c4(), nT, _lastResult,
+        _code.c1(), _code.c2(), _code.c3(), _code.c4());
+
+    // Check if trial is a retry.
+    if (nT == _nT - 1 && trial == getTrial(nT)) {
+      getTrial(_nT - 1).getnBW(nB, nW);
+      return _lastResult;
     }
 
-    GameSession(int plid, int maxTime){
-        _plid = plid;
-        _time = maxTime;
-        _nT = 0;
-        _score = 0;
-        _startTime = time(NULL);
-        _playing = true;
-        char code[8];
-        generateCode(code);
-        _code = Trial(code, 7);
-        srand(time(NULL));
-
+    // If game has already ended, handling should be a bit different.
+    if (_lastResult != PLAYING) {
+      if (_lastResult == LOSS || _lastResult == WIN) {
+        // If it is not a retry, it is out of context.
+        return QUIT;
+      }
+      // If there was a timeout and it would not be the next trial,
+      // it also is out of context.
+      if (_lastResult == TIMEOUT && nT != _nT) {
+        return QUIT;
+      }
+      // Cases: TIMEOUT/QUIT/ERROR
+      return _lastResult;
     }
 
-    void generateCode(char *code) {
-        for (int i = 0; i < 7; i+=2) {
-        switch (rand() % 6){
-            case 0:
-            code[i] = Color::red;
-            break;
-            case 1:
-            code[i] = Color::green;
-            break;
-            case 2:
-            code[i] = Color::blue;
-            break;
-            case 3:
-            code[i] = Color::yellow;
-            break;
-            case 4:
-            code[i] = Color::orange;
-            break;
-            case 5:
-            code[i] = Color::purple;
-            break;
-        }
-        }
-        code[7] = '\0';
+    // Check if there is still time left
+    if (!checkTime()) {
+      _lastResult = TIMEOUT;
+      return _lastResult;
+    }
+    // Otherwise trial must be next trial.
+    if (nT != _nT) {
+      return INVALID;
+    }
+    // Check if trial was not attempted before.
+    for (const Trial &t : _trials) {
+      if (trial == t) return DUPLICATE;
     }
 
-    /// @brief Executes a trial
-    /// @param trial 
-    /// @param nT integer between 0 and 7 representing the trial number sent by the client
-    /// @return result of the attempt
-    int executeTrial(Trial trial, int nT){
-        bool result = trial.evaluateNumbers(_code);
-        // check if trial is a repeat
-        if(nT == _nT -1 && _trials[nT].getTrial() == trial.getTrial()){
-            return PLAYING; // regular reply without trial number increase
-        }
-
-        // check if trial is invalid
-        if (nT != _nT){ // trial number is not expected or a reapeat with wrong info
-            return INVALID;
-        }
-
-        for (int i = 0; i <= nT; i++){
-            if(_trials[i].getTrial() == trial.getTrial()){
-                return DUPLICATE;
-            }
-        }
-
-        // check if there is still time left
-        if(time(NULL) - _startTime > _time){
-            _playing = false;
-            return TIMEOUT;
-        }
-
-        _trials[_nT] = trial;
-        _nT++;
-        if(result){
-            _playing = false;
-            /// @todo calculate score
-            _score = 100 - (time(NULL) - _startTime);
-            return WIN; // win condition
-        }
-        if (_nT == 8){
-            _playing = false;
-            return LOSS; // loss condition
-        }
-        return PLAYING; // trial was played
+    getTrial(_nT++) = trial;
+    // Calculate numbers of blacks and whites
+    bool victory = trial.evaluateNumbers(_code, nB, nW);
+    // Check if limit of trials was exceeded.
+    if (_nT == TRIALS_NUMBER) {
+      _lastResult = LOSS;
     }
-    
-    void endGame(){
-        _playing = false;
+    // Or if it was a victory
+    if (victory) {
+      _lastResult = WIN;
     }
+    return _lastResult;
+  }
+
+  /// @brief Set game to no longer be in progress.
+  void endGame() { _lastResult = QUIT; }
+
+  /// @brief Get game score.
+  int score() const { return _score; }
+
+  /// @brief If time has expired will end game.
+  /// @return Whether game is within time limits.
+  bool checkTime() {
+    if (time(NULL) - _startTime > _maxTime) {
+      _lastResult = TIMEOUT;
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  /// @return Whether game is in progress. (Started and at least one trial was
+  /// attempted)
+  bool inProgress() { return _lastResult == PLAYING && _nT > 1 && checkTime(); }
+
+  /// @brief A started game does not mean it is in progress, it might have
+  /// already finished.
+  /// @return Whether game has started.
+  bool started() { return _lastResult != ERROR; }
 };
+static constexpr int e = sizeof(GameSession);
 
 #endif  // GAMESESSION_HPP_

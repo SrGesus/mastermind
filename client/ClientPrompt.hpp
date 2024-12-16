@@ -7,7 +7,7 @@
 
 #include <client/TCPClient.hpp>
 #include <client/UDPClient.hpp>
-#include <common/Trial.hpp>
+#include <common/Color.hpp>
 
 #define CASE(X)                                                    \
   case CommandSum::X:                                              \
@@ -194,12 +194,12 @@ class ClientPrompt {
 
   bool validColor(char c) {
     switch (c) {
-      case Color::red:
-      case Color::green:
-      case Color::blue:
-      case Color::yellow:
-      case Color::orange:
-      case Color::purple:
+      case Color::Red:
+      case Color::Green:
+      case Color::Blue:
+      case Color::Yellow:
+      case Color::Orange:
+      case Color::Purple:
         return true;
       default:  // Invalid color
         return false;
@@ -216,12 +216,12 @@ class ClientPrompt {
 
   void printColors() {
     printf("\nColors:\n");
-    printf("\t%c - Red\n", Color::red);
-    printf("\t%c - Green\n", Color::green);
-    printf("\t%c - Blue\n", Color::blue);
-    printf("\t%c - Yellow\n", Color::yellow);
-    printf("\t%c - Orange\n", Color::orange);
-    printf("\t%c - Purple\n", Color::purple);
+    printf("\t%c - Red\n", Color::Red);
+    printf("\t%c - Green\n", Color::Green);
+    printf("\t%c - Blue\n", Color::Blue);
+    printf("\t%c - Yellow\n", Color::Yellow);
+    printf("\t%c - Orange\n", Color::Orange);
+    printf("\t%c - Purple\n", Color::Purple);
   }
 
   int handleTry(const char *args) {
@@ -229,8 +229,19 @@ class ClientPrompt {
     char c1, c2, c3, c4, newLine;
 
     if (sscanf(args, "%c %c %c %c%c", &c1, &c2, &c3, &c4, &newLine) != 5 ||
-        newLine != '\n' || !validColor(c1) || !validColor(c2) ||
-        !validColor(c3) || !validColor(c4)) {
+        newLine != '\n') {
+      printTryUsage();
+      return -1;
+    }
+
+    // Convert lowercase characters to upper
+    c1 = toupper(c1);
+    c2 = toupper(c2);
+    c3 = toupper(c3);
+    c4 = toupper(c4);
+
+    if (!validColor(c1) || !validColor(c2) || !validColor(c3) ||
+        !validColor(c4)) {
       printTryUsage();
       return -1;
     }

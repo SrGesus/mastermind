@@ -11,22 +11,19 @@
 #include <common/UDPSocket.hpp>
 #include <server/UDPServerParser.hpp>
 
+#include "common/utils.hpp"
+
 class UDPServer {
  private:
   UDPSocket _socket;
-  bool verbose_flag;
 
  public:
-#define VERBOSE(...) \
-  if (verbose_flag) fprintf(stdout, "[Verbose]: " __VA_ARGS__);
-
   /// @brief Creates an UDP socket bound to provided ip. Will exit(1) if
   /// unsuccessful.
   /// @param ip Ip to be bound. Can be null.
   /// @param port Port to be bound. Must not be null.
   /// @param verbose_flag If true, will print debug messages.
-  UDPServer(const char *ip, const char *port, bool verbose_flag)
-      : _socket(), verbose_flag(verbose_flag) {
+  UDPServer(const char *ip, const char *port) : _socket() {
     struct addrinfo hints, *res = nullptr;
     int errcode;
 
@@ -51,18 +48,18 @@ class UDPServer {
   void processRequest(UDPServerParser &parser) {
     struct sockaddr_in addr;
     socklen_t addrlen = sizeof(addr);
-    
+
     const char *result = _socket.recvfrom(&addr, &addrlen);
 
     char ip[INET_ADDRSTRLEN];  // HMMMM
     inet_ntop(AF_INET, &(addr.sin_addr), ip, INET_ADDRSTRLEN);
     int port = ntohs(addr.sin_port);
 
-    VERBOSE("Received %s from %s:%d\n", result, ip, port);
+    VERBOSE("Received request from %s:%d\n", ip, port);
 
     result = parser.executeRequest(result);
 
-    VERBOSE("Sending back: \"%s\"\n", result);
+    DEBUG("Sending back: %s\n", result);
 
     _socket.sendto(result, (sockaddr &)addr, addrlen);
   }

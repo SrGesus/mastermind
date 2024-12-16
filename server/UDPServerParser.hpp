@@ -1,150 +1,183 @@
 #ifndef UDPSERVERPARSER_HPP_
 #define UDPSERVERPARSER_HPP_
 
-#include <common/utils.hpp>
-#include <common/Trial.hpp>
-#include <server/GameStorage.hpp>
 #include <string.h>
 
-class UDPServerParser {
-  private:
-  char _buf[BUFFER_SIZE];
-  GameStorage *_sessions;
+#include <common/utils.hpp>
+#include <server/GameStorage.hpp>
+#include <server/Trial.hpp>
 
-  bool validColor(char c) {
-    switch (c) {
-      case Color::red:
-      case Color::green:
-      case Color::blue:
-      case Color::yellow:
-      case Color::orange:
-      case Color::purple:
-        return true;
-      default:  // Invalid color
-        return false;
-    }
-  }
-  // 
+class UDPServerParser {
+ private:
+  char _buf[BUFFER_SIZE];
+  GameStorage &_gameStore;
+
+  //
   bool validCode(const char *code) {
     printf("validCode: %s\n", code);
     if (strlen(code) != 7) {
       return false;
     }
-    for (size_t i = 0; i < 7; i+=2) {
-      if (!validColor(code[i])) {
-        return false;
-      }
-    }
     return true;
   }
 
-
-  public:
-  UDPServerParser(GameStorage *sessions) : _sessions(sessions)  {}
+ public:
+  UDPServerParser(GameStorage &sessions) : _gameStore(sessions) {}
 
   const char *executeRequest(const char *req) {
+    // Start New Game
     if (strncmp(req, "SNG", 3) == 0) {
       int plid, maxTime;
-      if ((sscanf(req, "SNG %06d %03d\n", &plid, &maxTime) != 2) || (plid < 1 || plid > 999999 || maxTime < 1 || maxTime > 600)) {
-        sprintf(_buf, "RSG ERR\n");
-      } else if (_sessions->getPLIDSession(plid)->_playing) {
-        sprintf(_buf, "RSG NOK\n");
-      } else {
-        _sessions->startSession(plid, maxTime);
-        sprintf(_buf, "RSG OK\n");
+      char newLine;
+      if ((sscanf(req, "SNG %06d %03d%c", &plid, &maxTime, &newLine) != 3) ||
+          (plid < 1 || plid > 999999 || maxTime < 1 || maxTime > 600) ||
+          newLine != '\n') {
+        VERBOSE_APPEND("\tResult: Couldn't process request: %s", req);
+        return "RSG ERR\n";
+      }
+      VERBOSE_APPEND("\tType: Start New Game\n");
+      VERBOSE_APPEND("\tPLID: %06d\n", plid);
+      VERBOSE_APPEND("\tMaxTime: %3d\n", maxTime);
+
+      if (_gameStore.getSession(plid).inProgress()) {
+        // There's already a game in Progress.
+        VERBOSE_APPEND("\tResult: Game already in progress.\n");
+        return "RSG NOK\n";
       }
 
-      return _buf;
+      // Start a new game.
+      GameSession game = GameSession::newGame(maxTime);
+      _gameStore.newSession(plid, game);
+      char c1 = game.getCode().c1(), c2 = game.getCode().c2(),
+           c3 = game.getCode().c3(), c4 = game.getCode().c4();
+      VERBOSE_APPEND("\tResult: Started New Game with code %c %c %c %c.\n", c1,
+                     c2, c3, c4);
+      return "RSG OK\n";
     }
 
+    // Try a guess
     if (strncmp(req, "TRY", 3) == 0) {
       int plid, nT, res;
-      GameSession *game;
-      char guess[8];
-      memset(guess, ' ', sizeof(guess));
-      guess[7] = '\0';
+      char c1, c2, c3, c4, newLine;
 
-      if ((sscanf(req, "TRY %06d %c %c %c %c %d\n", &plid, &guess[0], &guess[2], &guess[4], &guess[6], &nT) != 6) || (plid < 1 || plid > 999999)) {
-        sprintf(_buf, "RTR ERR\n");
+      // Check
+      if ((sscanf(req, "TRY %06d %c %c %c %c %d%c", &plid, &c1, &c2, &c3, &c4,
+                  &nT, &newLine) != 7) ||
+          (plid < 1 || plid > 999999)) {
+        VERBOSE_APPEND("\tResult: Couldn't process request: %s", req);
+        return "RTR ERR\n";
       }
-      /// horrible naming btw
-      game = _sessions->getPLIDSession(plid);
-      printf("game: %p\n", (void *)game);
-      if (game == NULL || !game->_playing) {
-        sprintf(_buf, "RTR NOK\n");
-        return _buf;
-      }
-
-      if (nT < 1 || nT > 8) {
-        sprintf(_buf, "RTR INV\n");
-        return _buf;
-      }
-
-      Trial t = Trial(guess, 7);
-      if (!t.isValid()){
-        sprintf(_buf, "RTR ERR\n");
-        return _buf;
+      VERBOSE_APPEND("\tType: Try\n");
+      VERBOSE_APPEND("\tPLID: %06d\n", plid);
+      VERBOSE_APPEND("\tTrial: %c %c %c %c\n", c1, c2, c3, c4);
+      VERBOSE_APPEND("\tnT: %d\n", nT);
+      GameSession &game = _gameStore.getSession(plid);
+      if (!game.started()) {
+        // There is no game for this PLID.
+        VERBOSE_APPEND("\tResult: There's currently no game in progress.\n");
+        return "RTR NOK\n";
       }
 
+      Trial t(c1, c2, c3, c4);
+      uint16_t nB = 0, nW = 0;
+      const Trial &code = game.getCode();
+      res = game.executeTrial(t, nT, nB, nW);
 
-
-      res = _sessions->getPLIDSession(plid)->executeTrial(t, nT-1);
-
-      switch (res){
-        case GameSession::TrialResult::WIN:
-          sprintf(_buf, "RTR OK %d %d %d %s\n", nT, 4, 0, guess);
-          break;
-        case GameSession::TrialResult::PLAYING:
-        // was segfaulting here because nt was actually pid
-          sprintf(_buf, "RTR OK %d %s %s\n", nT, game->_trials[nT-1].getnBnW(), guess);
-          break;
+      switch (res) {
+        case GameSession::TrialResult::ERROR:
+          VERBOSE_APPEND("\tResult: Couldn't process request: %s", req);
+          return "RTR ERR\n";
+        case GameSession::TrialResult::QUIT:
+          VERBOSE_APPEND("\tResult: There's currently no game in progress.\n");
+          return "RTR NOK\n";
         case GameSession::TrialResult::DUPLICATE:
-          sprintf(_buf, "RTR DUP\n");
+          VERBOSE_APPEND(
+              "\tResult: Same attempt was already made this session.\n");
+          return "RTR DUP\n";
         case GameSession::TrialResult::INVALID:
-          sprintf(_buf, "RTR INV\n");
-          break;
+          VERBOSE_APPEND("\tResult: Invalid trial number.\n");
+          return "RTR INV\n";
         case GameSession::TrialResult::TIMEOUT:
-          sprintf(_buf, "RTR ETM %s\n", game->_code.getTrial());
-          break;
+          VERBOSE_APPEND("\tResult: Time Limit Exceeded.\n");
+          sprintf(_buf, "RTR ETM %c %c %c %c\n", code.c1(), code.c2(),
+                  code.c3(), code.c4());
+          return _buf;
         case GameSession::TrialResult::LOSS:
-          sprintf(_buf, "RTR ENT %d %s %s\n", nT, game->_trials[nT-1].getnBnW(), game->_code.getTrial());
-          break;
+          VERBOSE_APPEND("\tResult: Limit of Tries Exceeded.\n");
+          sprintf(_buf, "RTR ENT %c %c %c %c\n", code.c1(), code.c2(),
+                  code.c3(), code.c4());
+          return _buf;
+        case GameSession::TrialResult::WIN:
+          VERBOSE_APPEND("\tResult: Victory!\n");
+          _gameStore.addToScoreboard(game);
+          sprintf(_buf, "RTR OK %d %d %d\n", nT, nB, nW);
+          return _buf;
+        case GameSession::TrialResult::PLAYING:
+          VERBOSE_APPEND("\tResult: nB=%d nW=%d.\n", nB, nW);
+          sprintf(_buf, "RTR OK %d %d %d\n", nT, nB, nW);
+          return _buf;
       }
     }
 
+    // Quit game
     if (strncmp(req, "QUT", 3) == 0) {
       int plid;
-      if ((sscanf(req, "QUT %06d\n", &plid) != 1) || (plid < 1 || plid > 999999) || _sessions->getPLIDSession(plid) == NULL || !_sessions->getPLIDSession(plid)->_playing) {
-        sprintf(_buf, "RQT NOK\n");
+      char newLine;
+
+      if ((sscanf(req, "QUT %06d%c", &plid, &newLine) != 2) ||
+          (plid < 1 || plid > 999999) || newLine != '\n') {
+        VERBOSE_APPEND("\tResult: Couldn't process request: %s", req);
+        return "RQT ERR\n";
       }
-      sprintf(_buf, "RQT OK %s\n", _sessions->getPLIDSession(plid)->_code.getTrial());
+      VERBOSE_APPEND("\tType: Quit\n");
+      VERBOSE_APPEND("\tPLID: %06d\n", plid);
+      GameSession &game = _gameStore.getSession(plid);
+      if (!game.inProgress()) {
+        VERBOSE_APPEND("\tResult: There's currently no game in progress.\n");
+        return "RQT NOK\n";
+      }
+      VERBOSE_APPEND("\tResult: Quit game.\n");
+      game.endGame();
+      const Trial &code = game.getCode();
+      sprintf(_buf, "RQT OK %c %c %c %c\n", code.c1(), code.c2(), code.c3(),
+              code.c4());
+      return _buf;
     }
 
+    // Start new Game with given secret
     if (strncmp(req, "DBG", 3) == 0) {
       int plid, maxTime;
-      char key[8];
-      memset(key, ' ', sizeof(key));
-      key[7] = '\0';
-
-      if ((sscanf(req, "DBG %06d %03d %c %c %c %c\n", &plid, &maxTime, &key[0], &key[2], &key[4], &key[6]) != 6) || (plid < 1 || plid > 999999 || maxTime < 1 || maxTime > 600) || !validCode(key)) {
-        printf("%s\n", key);
-        sprintf(_buf, "RDB ERR\n");
-        return _buf;
+      char c1, c2, c3, c4, newLine;
+      if ((sscanf(req, "DBG %06d %03d %c %c %c %c%c", &plid, &maxTime, &c1, &c2,
+                  &c3, &c4, &newLine) != 7) ||
+          (plid < 1 || plid > 999999 || maxTime < 1 || maxTime > 600) ||
+          newLine != '\n') {
+        VERBOSE_APPEND("\tResult: Couldn't process request: %s", req);
+        return "RDB ERR\n";
       }
-
-      if (_sessions->getPLIDSession(plid)->_playing) {
-        sprintf(_buf, "RDB NOK\n");
-      } else {
-        _sessions->startSession(plid, maxTime, key);
-        sprintf(_buf, "RDB OK\n");
+      Trial code = Trial(c1, c2, c3, c4);
+      if (!code.isValid()) {
+        VERBOSE_APPEND("\tResult: Couldn't process request: %s", req);
+        return "RDB ERR\n";
       }
-      return _buf;
-
+      VERBOSE_APPEND("\tType: Start New Debug Game\n");
+      VERBOSE_APPEND("\tPLID: %06d\n", plid);
+      VERBOSE_APPEND("\tMaxTime: %3d\n", maxTime);
+      VERBOSE_APPEND("\tCode: %c %c %c %c\n", c1, c2, c3, c4);
+      if (_gameStore.getSession(plid).inProgress()) {
+        // There's already a game in Progress.
+        VERBOSE_APPEND("\tResult: Game already in Progress.\n");
+        return "RDB NOK\n";
+      }
+      // Start a new game.
+      VERBOSE_APPEND("\tResult: Started New Game with code %c %c %c %c.\n", c1,
+                     c2, c3, c4);
+      _gameStore.newSession(plid, GameSession::newDebugGame(maxTime, code));
+      return "RDB OK\n";
     }
-    return _buf;
+    VERBOSE_APPEND("\tResult: Couldn't process request: %s", req);
+    return "ERR\n";
   }
-
 };
-
 
 #endif  // UDPSERVERPARSER_HPP_
