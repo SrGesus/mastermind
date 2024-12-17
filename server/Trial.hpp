@@ -2,6 +2,7 @@
 #define TRIAL_HPP_
 
 #include <cstdint>
+#include <string>
 
 #include "common/Color.hpp"
 #include "common/utils.hpp"

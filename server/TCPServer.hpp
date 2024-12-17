@@ -46,15 +46,18 @@ class TCPServer {
     freeaddrinfo(res);
   }
 
-  // void processRequest(TCPServerParser &parser) {
-  //   socklen_t addrlen;
+  // void processRequest(const TCPServerParser &parser) {
   //   struct sockaddr_in addr;
+  //   socklen_t addrlen = sizeof(addr);
+  //   char buf[BUFFER_SIZE];
 
-  //   const char *result = _socket.recvfrom(addr, addrlen);
+  //   TCPConnection con = _socket.accept((sockaddr &)addr, addrlen);
 
-  //   result = parser.executeRequest(result);
+  //   con.read(buf, sizeof(buf));
 
-  //   _socket.sendto(result, (sockaddr &)addr, addrlen);
+  //   char * result = parser.executeRequest(buf);
+
+  //   con.write(result, );
   // }
 
   /// @return Server's TCP socket.

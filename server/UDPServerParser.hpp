@@ -39,14 +39,15 @@ class UDPServerParser {
       VERBOSE_APPEND("\tPLID: %06d\n", plid);
       VERBOSE_APPEND("\tMaxTime: %3d\n", maxTime);
 
-      if (_gameStore.getSession(plid).inProgress()) {
+      GameSession &game = _gameStore.getSession(plid);
+      if (game.inProgress() && game.nT() > 1) {
         // There's already a game in Progress.
         VERBOSE_APPEND("\tResult: Game already in progress.\n");
         return "RSG NOK\n";
       }
 
       // Start a new game.
-      GameSession game = GameSession::newGame(maxTime);
+      game = GameSession::newGame(maxTime);
       _gameStore.newSession(plid, game);
       char c1 = game.getCode().c1(), c2 = game.getCode().c2(),
            c3 = game.getCode().c3(), c4 = game.getCode().c4();

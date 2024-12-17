@@ -181,7 +181,9 @@ class GameSession {
 
   /// @return Whether game is in progress. (Started and at least one trial was
   /// attempted)
-  bool inProgress() { return _lastResult == PLAYING && _nT > 1 && checkTime(); }
+  bool inProgress() { return _lastResult == PLAYING && checkTime(); }
+
+  uint16_t nT() { return _nT; }
 
   /// @brief A started game does not mean it is in progress, it might have
   /// already finished.
