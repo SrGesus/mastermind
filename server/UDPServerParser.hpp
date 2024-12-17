@@ -109,7 +109,7 @@ class UDPServerParser {
           return _buf;
         case GameSession::TrialResult::WIN:
           VERBOSE_APPEND("\tResult: Victory!\n");
-          _gameStore.addToScoreboard(game);
+          _gameStore.addToScoreboard(plid, game);
           sprintf(_buf, "RTR OK %d %d %d\n", nT, nB, nW);
           return _buf;
         case GameSession::TrialResult::PLAYING:

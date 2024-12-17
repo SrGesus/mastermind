@@ -154,7 +154,7 @@ class GameSession {
   void endGame() { _lastResult = QUIT; }
 
   /// @brief Get game score.
-  int score() const { return _score; }
+  int score() const { return _nT; }
 
   /// @brief If time has expired will end game.
   /// @return Whether game is within time limits.
