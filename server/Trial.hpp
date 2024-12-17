@@ -121,6 +121,11 @@ class Trial {
     return nB == 4;
   }
 
+  /// @brief Get the trial in a string format.
+  std::string toString() const {
+    return std::string(1, c1()) + c2() + c3() + c4();
+  }
+
  private:
   static ColorByte color_to_byte(char c) {
 #define COLOR_CASE(X)  \
