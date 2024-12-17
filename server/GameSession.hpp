@@ -50,7 +50,7 @@ class GameSession {
 
  public:
   /// @brief Default constructor. Resets seed on random number generator.
-  GameSession() { srand(time(NULL)); }
+  GameSession() { }
 
   /// @brief Method that creates a session with a given secret code.
   /// @param maxTime Session time limit.

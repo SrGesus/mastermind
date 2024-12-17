@@ -22,7 +22,7 @@ class UDPServerParser {
   }
 
  public:
-  UDPServerParser(GameStorage &sessions) : _gameStore(sessions) {}
+  UDPServerParser(GameStorage &sessions) : _gameStore(sessions) { srand(time(NULL)); }
 
   const char *executeRequest(const char *req) {
     // Start New Game
