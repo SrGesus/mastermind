@@ -82,6 +82,18 @@ class GameSession {
 
   const Trial &getCode() const { return _code; }
 
+  /// @brief Generates string representation of played trials.
+  /// @return String representation of played trials.
+  std::string showTrials() const {
+    std::string s;
+    for (int i = 0; i < _nT - 1; i++) {
+      s += getTrial(i + 1).toString() + "\n";
+    }
+    int remaining = time(NULL) - _startTime > 0;
+    s += remaining < 0 ? "0\n" : std::to_string(remaining) + "\n";
+    return s;
+  }
+
   /// @brief Attempts to execute a trial
   /// @param trial To be executed.
   /// @param nT Integer between 1 and 8 representing the trial number.
