@@ -6,7 +6,7 @@
 #include "server/UDPServer.hpp"
 #include "server/UDPServerParser.hpp"
 
-const char *DEFAULT_IP = "localhost";
+const char *DEFAULT_IP = "0.0.0.0";
 const char *DEFAULT_PORT = "58000";
 
 int main(int argc, char **argv) {
