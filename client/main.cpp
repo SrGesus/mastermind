@@ -12,6 +12,7 @@ const char *DEFAULT_PORT = "58000";
 int main(int argc, char **argv) {
   const char *GSIp = DEFAULT_IP, *GSPort = DEFAULT_PORT;
 
+  // Handle CLI Flags
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-n") == 0 && i + 1 < argc)
       GSIp = argv[++i];
@@ -30,7 +31,7 @@ int main(int argc, char **argv) {
 
   ClientPrompt p = ClientPrompt(GSIp, GSPort);
 
-  while (p.prompt() != 1);
+  while (p.processCommand() != 1);
 
   exit(0);
 }

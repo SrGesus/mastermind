@@ -1,8 +1,11 @@
 #include <stdio.h>
 #include <string.h>
+#include <sys/select.h>
 
 #include "common/utils.hpp"
 #include "server/GameStorage.hpp"
+#include "server/TCPServer.hpp"
+#include "server/TCPServerParser.hpp"
 #include "server/UDPServer.hpp"
 #include "server/UDPServerParser.hpp"
 
@@ -30,11 +33,27 @@ int main(int argc, char **argv) {
   INFO("GSPort is %s\n", port);
 
   GameStorage gameStore = GameStorage();
-  UDPServer s = UDPServer(ip, port);
-  UDPServerParser parser = UDPServerParser(gameStore);
+  UDPServer udpServer = UDPServer(ip, port);
+  TCPServer tcpServer = TCPServer(ip, port);
+  UDPServerParser udpParser = UDPServerParser(gameStore);
+  TCPServerParser tcpParser = TCPServerParser(gameStore);
+
+  fd_set rfds;
+  FD_ZERO(&rfds);                          // Clear input mask
+  FD_SET(udpServer.socket().fd(), &rfds);  // Set UDP Channel on
+  FD_SET(tcpServer.socket().fd(), &rfds);  // Set TCP Channel on
 
   while (1) {
-    s.processRequest(parser);
+    int ready = select(FD_SETSIZE, &rfds, nullptr, nullptr, nullptr);
+    if (ready == -1) {
+      WARN("Select failed: %s\n", strerror(errno));
+    }
+    if (FD_ISSET(udpServer.socket().fd(), &rfds)) {
+      udpServer.processRequest(udpParser);
+    }
+    if (FD_ISSET(tcpServer.socket().fd(), &rfds)) {
+      tcpServer.processRequest(tcpParser);
+    }
   }
 
   return 0;

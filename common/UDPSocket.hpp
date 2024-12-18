@@ -15,15 +15,16 @@ class UDPSocket {
   char _buf[BUFFER_SIZE];
   int _fd;
 
+  // Delete copy constructor to prevent accidental copies
+  UDPSocket(const UDPSocket &) = delete;
+  UDPSocket &operator=(const UDPSocket &) = delete;
+
  public:
   /// @brief Creates an UDP Socket.
   UDPSocket() {
     _fd = socket(AF_INET, SOCK_DGRAM, 0);  // UDP socket
     if (_fd == -1) ERROR("Failed to create UDP Socket: %s\n", strerror(errno));
   }
-
-  UDPSocket(const UDPSocket &) = delete;
-  UDPSocket &operator=(const UDPSocket &) = delete;
 
   /// @brief Sends null-terminated string to provided address.
   /// @param in Null-terminated data to be sent.
@@ -67,8 +68,8 @@ class UDPSocket {
 
   ~UDPSocket() {
     if (_fd > 0) {
-      DEBUG("UDP Socket was closed.\n");
       close(_fd);
+      DEBUG("UDP Socket was closed.\n");
     }
   }
 };

@@ -386,7 +386,7 @@ class ClientPrompt {
     printf("Could not show trials for plid: \"%06d\"\n", _plid);
     return -1;
   }
-  
+
   int handleExit(const char *args) {
     quit();
     return 1;
@@ -417,7 +417,7 @@ class ClientPrompt {
 
   /// @brief Prompts player for command.
   /// @return 1 if exit was called, 0 otherwise, -1 if there was an error.
-  int prompt() {
+  int processCommand() {
     char buffer[BUFFER_SIZE];
     buffer[sizeof(buffer) - 1] = '\0';
 

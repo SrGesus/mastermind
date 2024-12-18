@@ -17,7 +17,7 @@ class UDPClient {
 
  public:
   /// @brief Max number of retries for commands
-  static const int MAX_RETRIES = 10;
+  static const int MAX_RETRIES = 3;
 
   /// @brief Creates a UDP Client associated with the provided server.
   /// @param ip Ip of the server. Can be null.
@@ -80,7 +80,7 @@ class UDPClient {
       }
     }
     WARN("Could not get reply from server: Maximum retries (%d) exceeded.\n",
-           MAX_RETRIES);
+         MAX_RETRIES);
     return ERR_RESPONSE;
   }
 

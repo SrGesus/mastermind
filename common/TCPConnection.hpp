@@ -16,6 +16,10 @@ class TCPConnection {
  private:
   int _fd;
 
+  // Delete copy constructor to prevent accidental copies
+  TCPConnection(const TCPConnection &) = delete;
+  TCPConnection &operator=(const TCPConnection &) = delete;
+
  public:
   /// @brief Constructor from fd.
   /// @param fd Socket fd.
@@ -25,13 +29,14 @@ class TCPConnection {
   /// @param buf Buffer to be read.
   /// @param siz buffer size
   /// @return Number of bytes read. If unsucessful -1.
-  int read(char* buf, size_t siz) {
+  int read(char *buf, size_t siz) {
     int n_read = 0, n;
     do {
       n = ::read(_fd, buf + n_read, siz - n_read);
       if (n > 0) n_read += n;
       if (n == -1) {
-        if (errno != EINTR) {
+        if (errno == EINTR) {
+          DEBUG("Read was interrupted bruh\n")
           continue;  // Read was interrupted
         }
         WARN("Failed to read to TCP Socket: %s\n", strerror(errno));
@@ -47,13 +52,14 @@ class TCPConnection {
   /// @param buf Contents to be sent, must have at least len chars.
   /// @param len Length to be written.
   /// @return Number of bytes read. If unsucessful -1.
-  int write(const char* buf, size_t len) {
+  int write(const char *buf, size_t len) {
     int n_written = 0, n;
     do {
       n = ::write(_fd, buf + n_written, len - n_written);
       if (n > 0) n_written += n;
       if (n == -1) {
-        if (errno != EINTR) {
+        if (errno == EINTR) {
+          DEBUG("Write was interrupted bruh\n")
           continue;  // Write was interrupted
         }
         WARN("Failed to write to TCP Socket: %s\n", strerror(errno));
@@ -65,6 +71,8 @@ class TCPConnection {
 
   /// @return Socket's file descriptor.
   int fd() { return _fd; }
+
+  void invalidate() { _fd = -1; }
 
   ~TCPConnection() {
     if (_fd != -1) {

@@ -70,7 +70,7 @@ class TCPClient {
         case -1:  // Unexpected Error
           DEBUG("Could not get reply from server: %s\n", strerror(errno));
           return ERR_RESPONSE;
-        default:                               // Handle message
+        default:                                     // Handle message
           if (con.read(_buf, sizeof(_buf)) == -1) {  // Unexpected Error
             DEBUG("Could not get reply from server: %s\n", strerror(errno));
             return ERR_RESPONSE;
@@ -80,7 +80,7 @@ class TCPClient {
       }
     }
     WARN("Could not get reply from server: Maximum retries (%d) exceeded.\n",
-          MAX_RETRIES);
+         MAX_RETRIES);
     return ERR_RESPONSE;
   }
 

@@ -9,7 +9,17 @@
 #include "server/GameSession.hpp"
 
 class GameStorage {
+ private:
+  std::unordered_map<int, GameSession> _sessions;
+  std::vector<std::pair<int, GameSession>> _scoreboard;
+
+  // Delete copy constructor to prevent accidental copies
+  GameStorage(const GameStorage&) = delete;
+  GameStorage& operator=(const GameStorage&) = delete;
+
  public:
+  GameStorage() {}
+
   GameSession& newSession(int plid, GameSession s) {
     return (_sessions[plid] = s);
   }
@@ -28,12 +38,12 @@ class GameStorage {
         _scoreboard.back() = std::make_pair(plid, s);
       }
     }
-    std::stable_sort(_scoreboard.begin(), _scoreboard.end(), 
-             [](const std::pair<int, GameSession>& a, const std::pair<int, GameSession>& b) {
-               return a.second.score() < b.second.score();
-             });
+    std::stable_sort(_scoreboard.begin(), _scoreboard.end(),
+                     [](const std::pair<int, GameSession>& a,
+                        const std::pair<int, GameSession>& b) {
+                       return a.second.score() < b.second.score();
+                     });
   }
-
 
   std::vector<std::pair<int, GameSession>> getScoreboard() {
     return _scoreboard;
@@ -43,12 +53,11 @@ class GameStorage {
     std::string scoreboardString;
     auto scoreboard = getScoreboard();
     for (auto const& s : scoreboard) {
-      scoreboardString += std::to_string(s.first) + " " + s.second.getCode().toString() + " " + std::to_string(s.second.score()) + "\n";
+      scoreboardString += std::to_string(s.first) + " " +
+                          s.second.getCode().toString() + " " +
+                          std::to_string(s.second.score()) + "\n";
     }
     return scoreboardString;
   }
- private:
-  std::unordered_map<int, GameSession> _sessions;
-  std::vector<std::pair<int, GameSession>> _scoreboard;
 };
 #endif  // GAMESTORAGE_HPP_

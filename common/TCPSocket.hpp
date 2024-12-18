@@ -3,6 +3,7 @@
 
 #include <errno.h>
 #include <netdb.h>
+#include <signal.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -15,15 +16,23 @@ class TCPSocket {
  private:
   int _fd;
 
+  // Delete copy constructor to prevent accidental copies
+  TCPSocket(const TCPSocket &) = delete;
+  TCPSocket &operator=(const TCPSocket &) = delete;
+
  public:
   /// @brief Creates an TCP Socket.
   TCPSocket() {
     _fd = socket(AF_INET, SOCK_STREAM, 0);  // TCP socket
     if (_fd == -1) ERROR("Failed to create TCP Socket: %s\n", strerror(errno));
-  }
 
-  TCPSocket(const TCPSocket &) = delete;
-  TCPSocket &operator=(const TCPSocket &) = delete;
+    // Save process from SIGPIPE
+    struct sigaction act;
+    memset(&act, 0, sizeof act);
+    act.sa_handler = SIG_IGN;
+    if (sigaction(SIGPIPE, &act, NULL) == -1)
+      ERROR("Failed to create handler for SIGPIPE: %s\n", strerror(errno));
+  }
 
   /// @brief Transforms a tcp socket into a tcp connection.
   /// @param addr Address to be connected to.
@@ -67,10 +76,16 @@ class TCPSocket {
     return ::bind(_fd, &addr, len);
   }
 
+  /// @return Socket's file descriptor.
+  int fd() { return _fd; }
+
   ~TCPSocket() {
     if (_fd > 0) {
+      int ret;
+      do
+        ret = close(_fd);
+      while (ret == -1 && errno == EINTR);
       DEBUG("TCP Socket was closed.\n");
-      close(_fd);
     }
   }
 };

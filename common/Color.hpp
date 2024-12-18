@@ -11,4 +11,4 @@ enum Color {
   Purple = 'P'
 };
 
-#endif // COLOR_HPP_
+#endif  // COLOR_HPP_

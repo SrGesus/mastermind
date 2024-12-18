@@ -12,17 +12,10 @@ class UDPServerParser {
   char _buf[BUFFER_SIZE];
   GameStorage &_gameStore;
 
-  //
-  bool validCode(const char *code) {
-    printf("validCode: %s\n", code);
-    if (strlen(code) != 7) {
-      return false;
-    }
-    return true;
-  }
-
  public:
-  UDPServerParser(GameStorage &sessions) : _gameStore(sessions) { srand(time(NULL)); }
+  UDPServerParser(GameStorage &sessions) : _gameStore(sessions) {
+    srand(time(NULL));
+  }
 
   const char *executeRequest(const char *req) {
     // Start New Game
@@ -73,7 +66,7 @@ class UDPServerParser {
       VERBOSE_APPEND("\tTrial: %c %c %c %c\n", c1, c2, c3, c4);
       VERBOSE_APPEND("\tnT: %d\n", nT);
       GameSession &game = _gameStore.getSession(plid);
-      if (!game.started()) {
+      if (game.exists()) {
         // There is no game for this PLID.
         VERBOSE_APPEND("\tResult: There's currently no game in progress.\n");
         return "RTR NOK\n";

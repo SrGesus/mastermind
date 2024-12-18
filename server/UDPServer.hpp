@@ -51,11 +51,11 @@ class UDPServer {
 
     const char *result = _socket.recvfrom(&addr, &addrlen);
 
-    char ip[INET_ADDRSTRLEN];  // HMMMM
+    char ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &(addr.sin_addr), ip, INET_ADDRSTRLEN);
     int port = ntohs(addr.sin_port);
 
-    VERBOSE("Received request from %s:%d\n", ip, port);
+    VERBOSE("Received UDP request from %s:%d\n", ip, port);
 
     result = parser.executeRequest(result);
 

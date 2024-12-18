@@ -50,7 +50,7 @@ class GameSession {
 
  public:
   /// @brief Default constructor. Resets seed on random number generator.
-  GameSession() { }
+  GameSession() {}
 
   /// @brief Method that creates a session with a given secret code.
   /// @param maxTime Session time limit.
@@ -86,8 +86,8 @@ class GameSession {
   /// @return String representation of played trials.
   std::string showTrials() const {
     std::string s;
-    for (int i = 0; i < _nT - 1; i++) {
-      s += getTrial(i + 1).toString() + "\n";
+    for (int i = 1; i < _nT; i++) {
+      s += getTrial(i).toString() + "\n";
     }
     int remaining = time(NULL) - _startTime > 0;
     s += remaining < 0 ? "0\n" : std::to_string(remaining) + "\n";
@@ -184,11 +184,9 @@ class GameSession {
   bool inProgress() { return _lastResult == PLAYING && checkTime(); }
 
   uint16_t nT() { return _nT; }
+  TrialResult lastResult() { return _lastResult; }
 
-  /// @brief A started game does not mean it is in progress, it might have
-  /// already finished.
-  /// @return Whether game has started.
-  bool started() { return _lastResult != ERROR; }
+  bool exists() { return _lastResult != ERROR; }
 };
 static constexpr int e = sizeof(GameSession);
 
