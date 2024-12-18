@@ -345,7 +345,7 @@ class ClientPrompt {
       fprintf(f, "%s", resp + pos);
       fclose(f);
       fprintf(stdout, "%s", resp + pos);
-      fprintf(stdout, "Trials were written to file: %s\n", fname);
+      fprintf(stdout, "Trials (%d bytes) written to file: %s\n", fsize, fname);
 
       return 0;
     }
@@ -378,7 +378,7 @@ class ClientPrompt {
       fprintf(f, "%s", resp + pos);
       fclose(f);
       fprintf(stdout, "%s", resp + pos);
-      fprintf(stdout, "Scoreboard was written to file: %s\n", fname);
+      fprintf(stdout, "Scoreboard (%d bytes) written to file: %s\n", fsize, fname);
 
       return 0;
     }

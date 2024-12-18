@@ -29,9 +29,9 @@ int main(int argc, char **argv) {
   DEBUG("GSPort is %s\n", port);
   DEBUG("GSIp is %s\n", ip);
 
-  ClientPrompt p = ClientPrompt(ip, port);
+  ClientPrompt prompt = ClientPrompt(ip, port);
 
-  while (p.processCommand() != 1);
+  while (prompt.processCommand() != 1);
 
   exit(0);
 }

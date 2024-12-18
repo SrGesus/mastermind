@@ -22,15 +22,14 @@ class TCPServerParser {
       }
       GameSession &game = _gameStore.getSession(plid);
       if (!game.exists()) {
-        DEBUG("Doesn't exist lol\n")
         return "STR NOK\n";
       }
       const char *status = game.inProgress() ? "ACT" : "FIN";
 
       std::string Fdata = game.showTrials();
 
-      
-      
+      sprintf(req, "RST %s TRIALS_%06d.txt %lu %s\n", status, plid, Fdata.size(), Fdata.c_str());
+      return req;
     }
     return "ERR\n";
   }

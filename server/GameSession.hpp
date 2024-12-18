@@ -179,8 +179,7 @@ class GameSession {
     }
   }
 
-  /// @return Whether game is in progress. (Started and at least one trial was
-  /// attempted)
+  /// @return Whether game is in progress. (Playing and not out of time)
   bool inProgress() { return _lastResult == PLAYING && checkTime(); }
 
   uint16_t nT() { return _nT; }
