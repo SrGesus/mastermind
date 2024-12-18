@@ -66,7 +66,7 @@ class UDPServerParser {
       VERBOSE_APPEND("\tTrial: %c %c %c %c\n", c1, c2, c3, c4);
       VERBOSE_APPEND("\tnT: %d\n", nT);
       GameSession &game = _gameStore.getSession(plid);
-      if (game.exists()) {
+      if (!game.exists()) {
         // There is no game for this PLID.
         VERBOSE_APPEND("\tResult: There's currently no game in progress.\n");
         return "RTR NOK\n";

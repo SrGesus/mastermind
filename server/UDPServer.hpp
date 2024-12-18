@@ -23,7 +23,7 @@ class UDPServer {
   /// @param ip Ip to be bound. Can be null.
   /// @param port Port to be bound. Must not be null.
   /// @param verbose_flag If true, will print debug messages.
-  UDPServer(const char *ip, const char *port) : _socket() {
+  UDPServer(const char *port, const char *ip = nullptr) : _socket() {
     struct addrinfo hints, *res = nullptr;
     int errcode;
 
@@ -37,7 +37,7 @@ class UDPServer {
       ERROR("Failed to translate address %s:%s: %s\n",
             ip != nullptr ? ip : "0.0.0.0", port, gai_strerror(errcode));
 
-    errcode = _socket.bind(*(res->ai_addr), res->ai_addrlen);
+    errcode = _socket.bind(res->ai_addr, res->ai_addrlen);
     if (errcode == -1)
       ERROR("Failed to bind to %s:%s: %s\nIs this port already in use?\n",
             ip != nullptr ? ip : "0.0.0.0", port, strerror(errno));

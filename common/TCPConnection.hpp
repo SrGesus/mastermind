@@ -29,44 +29,20 @@ class TCPConnection {
     FD_SET(_fd, &_set);
   }
 
-  /// @brief Will read tcp connection into buffer.
-  /// @param buf Buffer to be read.
-  /// @param len Length to be written.
-  /// @return Number of bytes read. If unsucessful -1.
-  int read(char *buf, int len) {
-    int n_read = 0, n;
-    timeval timeout = {.tv_sec = 0, .tv_usec = 800000};
-    do {
-      n = ::read(_fd, buf + n_read, len - n_read);
-      if (n > 0) n_read += n;
-      if (n == -1) {
-        if (errno == EINTR) {
-          continue;  // Read was interrupted
-        }
-        WARN("Failed to read to TCP Socket: %s\n", strerror(errno));
-        buf[0] = '\0';
-        return -1;
-      }
-      // If after reading and waiting 800ms nothing else is read
-      // stop reading further.
-    } while (n != 0 && select(_fd + 1, &_set, nullptr, nullptr, &timeout) != 0);
-    buf[n_read] = '\0';
-    return n_read;
-  }
-
   /// @brief Will read tcp connection into buffer, until ending char is found.
   /// @param buf Buffer to be read.
   /// @param len Length to be read.
   /// @param ending character that represents the end.
   /// @return Number of bytes read. If unsucessful -1.
-  int read_ending(char *buf, int len, char ending) {
+  int read(char *buf, int len, char ending = '\0') {
     int n_read = 0, n;
     timeval timeout = {.tv_sec = 0, .tv_usec = 800000};
     do {
       n = ::read(_fd, buf + n_read, len - n_read);
       if (n > 0) {
         n_read += n;
-        if (buf[n_read-1] == ending) break;
+        // If reading ends with provided char, then we can stop.
+        if (buf[n_read - 1] == ending) break;
       }
       if (n == -1) {
         if (errno == EINTR) {
@@ -76,7 +52,7 @@ class TCPConnection {
         buf[0] = '\0';
         return -1;
       }
-      // If after reading and waiting 800ms nothing else is read
+      // If after reading and waiting timeout nothing else is read
       // stop reading further.
     } while (n != 0 && select(_fd + 1, &_set, nullptr, nullptr, &timeout) != 0);
     buf[n_read] = '\0';
@@ -105,8 +81,6 @@ class TCPConnection {
 
   /// @return Socket's file descriptor.
   int fd() { return _fd; }
-
-  void invalidate() { _fd = -1; }
 
   ~TCPConnection() {
     if (_fd != -1) {

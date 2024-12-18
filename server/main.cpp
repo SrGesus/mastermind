@@ -10,12 +10,13 @@
 #include "server/UDPServerParser.hpp"
 
 const char *DEFAULT_IP = "0.0.0.0";
-const char *DEFAULT_PORT = "58000";
+const char *DEFAULT_PORT = "58071";
 
 int main(int argc, char **argv) {
   const char *ip = DEFAULT_IP;
   const char *port = DEFAULT_PORT;
 
+  // Handle CLI Flags
   for (int i = 1; i < argc; i++) {
     if (strcmp(argv[i], "-p") == 0 && i + 1 < argc)
       port = argv[++i];
@@ -29,30 +30,35 @@ int main(int argc, char **argv) {
     }
   }
 
-  INFO("GSIp is %s\n", ip);
   INFO("GSPort is %s\n", port);
 
   GameStorage gameStore = GameStorage();
-  UDPServer udpServer = UDPServer(ip, port);
-  TCPServer tcpServer = TCPServer(ip, port);
+  UDPServer udpServer = UDPServer(port, ip);
+  TCPServer tcpServer = TCPServer(port, ip);
   UDPServerParser udpParser = UDPServerParser(gameStore);
   TCPServerParser tcpParser = TCPServerParser(gameStore);
 
-  fd_set rfds;
+  fd_set rfds, testfds;
   FD_ZERO(&rfds);                          // Clear input mask
   FD_SET(udpServer.socket().fd(), &rfds);  // Set UDP Channel on
   FD_SET(tcpServer.socket().fd(), &rfds);  // Set TCP Channel on
+  int nfds = std::max(udpServer.socket().fd(), tcpServer.socket().fd());
 
   while (1) {
-    int ready = select(FD_SETSIZE, &rfds, nullptr, nullptr, nullptr);
+    testfds = rfds;
+    int ready = select(nfds + 1, &testfds, nullptr, nullptr, nullptr);
     if (ready == -1) {
       WARN("Select failed: %s\n", strerror(errno));
     }
-    if (FD_ISSET(udpServer.socket().fd(), &rfds)) {
+    if (FD_ISSET(udpServer.socket().fd(), &testfds)) {
+      DEBUG("Processing UDP\n");
       udpServer.processRequest(udpParser);
     }
-    if (FD_ISSET(tcpServer.socket().fd(), &rfds)) {
-      tcpServer.processRequest(tcpParser);
+    if (FD_ISSET(tcpServer.socket().fd(), &testfds)) {
+      DEBUG("Processing TCP\n");
+
+      // Exit if process is child.
+      if (tcpServer.processRequest(tcpParser)) return 0;
     }
   }
 

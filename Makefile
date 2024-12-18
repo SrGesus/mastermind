@@ -8,7 +8,6 @@ SOURCE := $(wildcard $(addsuffix /*.c, $(SRC_DIRS)) $(addsuffix /*.cpp, $(SRC_DI
 HEADER := $(wildcard $(addsuffix /*.h, $(SRC_DIRS)) $(addsuffix /*.hpp, $(SRC_DIRS)))
 
 all: $(BUILD_DIR)/server $(BUILD_DIR)/client
-	
 
 $(BUILD_DIR)/server: $(wildcard server/*) $(wildcard common/*) $(BUILD_DIR)
 	$(CC) $(CFLAGS) server/main.cpp -o $@ -I.
@@ -28,5 +27,5 @@ $(BUILD_DIR):
 clean:
 	rm -f $(BUILD_DIR)/*.o $(BUILD_DIR)/server $(BUILD_DIR)/client
 
-.PHONY: all tidy clean
+# .PHONY: all tidy clean
 	

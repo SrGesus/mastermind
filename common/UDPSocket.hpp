@@ -59,8 +59,8 @@ class UDPSocket {
   /// @param len Address length
   /// @return On success, zero is returned. On error, -1 is returned, and errno
   /// is set to indicate the error.
-  int bind(const sockaddr &addr, socklen_t len) {
-    return ::bind(_fd, &addr, len);
+  int bind(const sockaddr *addr, socklen_t len) {
+    return ::bind(_fd, addr, len);
   }
 
   /// @return Socket's file descriptor.

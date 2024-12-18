@@ -18,7 +18,6 @@ class TCPSocket {
 
   // Delete copy constructor to prevent accidental copies
   TCPSocket(const TCPSocket &) = delete;
-  TCPSocket &operator=(const TCPSocket &) = delete;
 
  public:
   /// @brief Creates an TCP Socket.
@@ -72,8 +71,8 @@ class TCPSocket {
   /// @param len Address length
   /// @return On success, zero is returned. On error, -1 is returned, and errno
   /// is set to indicate the error.
-  int bind(const sockaddr &addr, socklen_t len) {
-    return ::bind(_fd, &addr, len);
+  int bind(const sockaddr *addr, socklen_t len) {
+    return ::bind(_fd, addr, len);
   }
 
   /// @return Socket's file descriptor.
@@ -82,8 +81,7 @@ class TCPSocket {
   ~TCPSocket() {
     if (_fd > 0) {
       int ret;
-      do
-        ret = close(_fd);
+      do ret = ::close(_fd);
       while (ret == -1 && errno == EINTR);
       DEBUG("TCP Socket was closed.\n");
     }
