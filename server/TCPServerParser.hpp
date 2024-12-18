@@ -32,6 +32,7 @@ class TCPServerParser {
       
       
     }
+    return "ERR\n";
   }
 };
 

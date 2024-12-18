@@ -71,7 +71,7 @@ class TCPServer {
 
     VERBOSE("Received TCP request from %s:%d\n", ip, port);
 
-    con.read(buf, sizeof(buf));
+    con.read_ending(buf, sizeof(buf), '\n');
 
     const char *result = parser.executeRequest(buf, sizeof(buf));
 

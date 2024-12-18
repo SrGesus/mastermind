@@ -15,6 +15,7 @@
 class TCPConnection {
  private:
   int _fd;
+  fd_set _set;
 
   // Delete copy constructor to prevent accidental copies
   TCPConnection(const TCPConnection &) = delete;
@@ -23,27 +24,61 @@ class TCPConnection {
  public:
   /// @brief Constructor from fd.
   /// @param fd Socket fd.
-  TCPConnection(int fd) : _fd(fd) {}
+  TCPConnection(int fd) : _fd(fd) {
+    FD_ZERO(&_set);
+    FD_SET(_fd, &_set);
+  }
 
   /// @brief Will read tcp connection into buffer.
   /// @param buf Buffer to be read.
-  /// @param siz buffer size
+  /// @param len Length to be written.
   /// @return Number of bytes read. If unsucessful -1.
-  int read(char *buf, size_t siz) {
+  int read(char *buf, int len) {
     int n_read = 0, n;
+    timeval timeout = {.tv_sec = 0, .tv_usec = 800000};
     do {
-      n = ::read(_fd, buf + n_read, siz - n_read);
+      n = ::read(_fd, buf + n_read, len - n_read);
       if (n > 0) n_read += n;
       if (n == -1) {
         if (errno == EINTR) {
-          DEBUG("Read was interrupted bruh\n")
           continue;  // Read was interrupted
         }
         WARN("Failed to read to TCP Socket: %s\n", strerror(errno));
         buf[0] = '\0';
         return -1;
       }
-    } while (n != 0);
+      // If after reading and waiting 800ms nothing else is read
+      // stop reading further.
+    } while (n != 0 && select(_fd + 1, &_set, nullptr, nullptr, &timeout) != 0);
+    buf[n_read] = '\0';
+    return n_read;
+  }
+
+  /// @brief Will read tcp connection into buffer, until ending char is found.
+  /// @param buf Buffer to be read.
+  /// @param len Length to be read.
+  /// @param ending character that represents the end.
+  /// @return Number of bytes read. If unsucessful -1.
+  int read_ending(char *buf, int len, char ending) {
+    int n_read = 0, n;
+    timeval timeout = {.tv_sec = 0, .tv_usec = 800000};
+    do {
+      n = ::read(_fd, buf + n_read, len - n_read);
+      if (n > 0) {
+        n_read += n;
+        if (buf[n_read-1] == ending) break;
+      }
+      if (n == -1) {
+        if (errno == EINTR) {
+          continue;  // Read was interrupted
+        }
+        WARN("Failed to read to TCP Socket: %s\n", strerror(errno));
+        buf[0] = '\0';
+        return -1;
+      }
+      // If after reading and waiting 800ms nothing else is read
+      // stop reading further.
+    } while (n != 0 && select(_fd + 1, &_set, nullptr, nullptr, &timeout) != 0);
     buf[n_read] = '\0';
     return n_read;
   }
@@ -52,14 +87,13 @@ class TCPConnection {
   /// @param buf Contents to be sent, must have at least len chars.
   /// @param len Length to be written.
   /// @return Number of bytes read. If unsucessful -1.
-  int write(const char *buf, size_t len) {
+  int write(const char *buf, int len) {
     int n_written = 0, n;
     do {
       n = ::write(_fd, buf + n_written, len - n_written);
       if (n > 0) n_written += n;
       if (n == -1) {
         if (errno == EINTR) {
-          DEBUG("Write was interrupted bruh\n")
           continue;  // Write was interrupted
         }
         WARN("Failed to write to TCP Socket: %s\n", strerror(errno));
