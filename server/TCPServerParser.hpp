@@ -31,6 +31,21 @@ class TCPServerParser {
       sprintf(req, "RST %s TRIALS_%06d.txt %lu %s\n", status, plid, Fdata.size(), Fdata.c_str());
       return req;
     }
+
+    if (strncmp(req, "SSB", 3) == 0) {
+      std::string Fdata = _gameStore.getScoreboardString();
+      if (Fdata.empty()) {
+        VERBOSE_APPEND("Scoreboard is empty.\n");
+        return "RSS EMPTY\n";
+      }
+      const time_t now = time(nullptr);
+      char timeStr[15];
+      strftime(timeStr, sizeof(timeStr), "%Y%m%d_%H%M%S", localtime(&now));
+      
+      VERBOSE_APPEND("\tScoreboard: %s\n", Fdata.c_str());
+      sprintf(req, "RSS OK SCOREBOARD_%s.txt %lu %s\n", timeStr, Fdata.size(), Fdata.c_str());
+      return req;
+    }
     return "ERR\n";
   }
 };

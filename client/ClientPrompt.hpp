@@ -345,7 +345,7 @@ class ClientPrompt {
       fprintf(f, "%s", resp + pos);
       fclose(f);
       fprintf(stdout, "%s", resp + pos);
-      fprintf(stdout, "Trials (%d bytes) written to file: %s\n", fsize, fname);
+      fprintf(stdout, "Trials (%s bytes) written to file: %s\n", fsize, fname);
 
       return 0;
     }
@@ -378,12 +378,15 @@ class ClientPrompt {
       fprintf(f, "%s", resp + pos);
       fclose(f);
       fprintf(stdout, "%s", resp + pos);
-      fprintf(stdout, "Scoreboard (%d bytes) written to file: %s\n", fsize, fname);
+      fprintf(stdout, "Scoreboard (%s bytes) written to file: %s\n", fsize, fname);
 
       return 0;
     }
-
-    printf("Could not show trials for plid: \"%06d\"\n", _plid);
+    if (strcmp(resp, "RSS EMPTY\n") == 0) {
+      printf("Scoreboard is empty.\n");
+      return 0;
+    }
+    printf("Failed to acquire scoreboard.\n");
     return -1;
   }
 
