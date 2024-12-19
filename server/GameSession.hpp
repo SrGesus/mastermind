@@ -36,6 +36,7 @@ class GameSession {
 
   time_t _startTime = 0;
   uint16_t _maxTime : 10 = 0;
+  uint16_t _remainingTime : 10 = 0;
   uint16_t _nT : 4 = 1;
   uint8_t _debug : 1 = false;
   uint8_t _score : 7 = 0;
@@ -89,9 +90,7 @@ class GameSession {
     for (int i = 1; i < _nT; i++) {
       s += getTrial(i).toString() + "\n";
     }
-    int remaining = time(NULL) - _startTime > 0;
-    s += remaining < 0 ? "0\n" : std::to_string(remaining) + "\n";
-    return s;
+    return s + std::to_string(_remainingTime) + "\n";
   }
 
   /// @brief Attempts to execute a trial
@@ -163,15 +162,32 @@ class GameSession {
   }
 
   /// @brief Set game to no longer be in progress.
-  void endGame() { _lastResult = QUIT; }
+  void endGame() { 
+    _lastResult = QUIT;
+    updateRemaining(time(nullptr));
+  }
 
   /// @brief Get game score.
   int score() const { return _nT; }
 
+  /// @brief Updates the remaining time.
+  /// @param currentTime 
+  /// @return Updated remaining time for session.
+  uint16_t updateRemaining(time_t currentTime) {
+    uint16_t duration = currentTime - _startTime;
+    if (duration > _maxTime) { 
+      _remainingTime = 0;
+    } else {
+      _remainingTime = _maxTime - duration;
+    }
+    return _remainingTime;
+  }
   /// @brief If time has expired will end game.
   /// @return Whether game is within time limits.
   bool checkTime() {
-    if (time(NULL) - _startTime > _maxTime) {
+    time_t current = time(nullptr);
+    updateRemaining(current);
+    if (current - _startTime > _maxTime) {
       _lastResult = TIMEOUT;
       return false;
     } else {
