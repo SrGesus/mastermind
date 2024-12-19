@@ -40,10 +40,10 @@ class TCPServerParser {
       }
       const time_t now = time(nullptr);
       char timeStr[15];
-      strftime(timeStr, sizeof(timeStr), "%Y%m%d_%H%M%S", localtime(&now));
+      strftime(timeStr, sizeof(timeStr), "%Y%m%d%H%M%S", localtime(&now));
       
       VERBOSE_APPEND("\tScoreboard: %s\n", Fdata.c_str());
-      sprintf(req, "RSS OK SCOREBOARD_%s.txt %lu %s\n", timeStr, Fdata.size(), Fdata.c_str());
+      sprintf(req, "RSS OK SCORES%14s.txt %lu %s\n", timeStr, Fdata.size(), Fdata.c_str());
       return req;
     }
     return "ERR\n";
