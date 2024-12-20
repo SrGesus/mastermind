@@ -200,8 +200,6 @@ class GameSession {
       }
 
     }
-    res << std::setw(10) << " " << "\n";
-
 
     if (_lastResult == TIMEOUT) {
       res << "\nYou ran out of time!\n";
