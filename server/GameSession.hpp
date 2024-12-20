@@ -4,6 +4,9 @@
 #include <time.h>
 
 #include <cstdlib>
+#include <ctime>
+#include <iomanip>
+#include <iostream>
 
 #include "Trial.hpp"
 
@@ -150,7 +153,8 @@ class GameSession {
   }
 
   /// @brief Set game to no longer be in progress.
-  /// @return Whether game was quited sucessfully or not if it wasn't in progress.
+  /// @return Whether game was quited sucessfully or not if it wasn't in
+  /// progress.
   int endGame() {
     if (inProgress()) {
       _lastResult = QUIT;
@@ -164,12 +168,21 @@ class GameSession {
 
   /// @brief Generates string representation of played trials.
   /// @return String representation of played trials.
-  std::string showTrials() const {
-    std::string s;
-    for (int i = 1; i < _nT; i++) {
-      s += getTrial(i).toString() + "\n";
+  std::string showTrials(int plid) const {
+    std::stringstream res;
+    std::time_t result = std::time(nullptr);
+    if (_lastResult == PLAYING) {
+      res << "Ongoing";
+    } else {
+      res << "Finalized";
     }
-    return s + std::to_string(getRemaining()) + "\n";
+    res << " game found for player " + std::to_string(plid) + "\n";
+    res << std::put_time(std::localtime(&result), "%c %Z");
+    for (int i = 1; i < _nT; i++) {
+      res << "\t" + std::to_string(i) + " - " + getTrial(i).toString() + "\n";
+    }
+    res << std::to_string(getRemaining()) + "\n";
+    return res.str();
   }
 
   time_t getRemaining() const {
