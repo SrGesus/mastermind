@@ -68,7 +68,7 @@ class Trial {
 
   /// @brief Save number of blacks and whites to given pointers.
   void getnBW(uint16_t &nBlack, uint16_t &nWhite) const {
-    uint16_t nB = _nBW & 0b1100;
+    uint16_t nB = (_nBW & 0b1100) >> 2;
     uint16_t nW = _nBW & 0b0011;
 
     if (nB == 3 && nW > 1) {
