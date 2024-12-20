@@ -55,6 +55,7 @@ class GameStorage {
     for (auto const& s : scoreboard) {
       scoreboardString += std::to_string(s.first) + " " +
                           s.second.getCode().toString() + " " +
+                          std::to_string(s.second.nT()) + " " +
                           std::to_string(s.second.score()) + "\n";
     }
     return scoreboardString;

@@ -36,7 +36,6 @@ class GameSession {
  private:
   /// @brief Maximum number of guesses that can be made in a game.
   static constexpr int TRIALS_NUMBER = 8;
-
   /// @brief Epoch time in seconds of game start.
   time_t _startTime = 0;
   /// @brief Provided time limit of game in seconds.
@@ -87,6 +86,8 @@ class GameSession {
   const Trial &getTrial(int nT) const { return _trials[nT - 1]; }
 
   const Trial &getCode() const { return _code; }
+
+  const int nT() const { return _nT; }
 
   /// @brief Attempts to execute a trial
   /// @param trial To be executed.
@@ -164,7 +165,11 @@ class GameSession {
   }
 
   /// @brief Get game score.
-  int score() const { return _nT; }
+  int score() const { return 
+    (TRIALS_NUMBER - _nT + 1) * 
+    (1 - ((_maxTime-1) / 600)) *
+    (1 - ((_duration -1) / _maxTime)); 
+  }
 
   /// @brief Generates string representation of played trials.
   /// @return String representation of played trials.
