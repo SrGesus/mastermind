@@ -324,9 +324,9 @@ class ClientPrompt {
 
     const char *resp = _tcpClient.runCommand(req);
 
-    char status[4], fname[32], fsize[32];
-    int pos;
-    if (sscanf(resp, "RST %3s %s %s %n", status, fname, fsize, &pos) == 3) {
+    char status[4], fname[32];
+    int pos, fsize;
+    if (sscanf(resp, "RST %3s %s %d %n", status, fname, &fsize, &pos) == 3) {
       if (strcmp("FIN", status) == 0) {
         _playing = false;
       } else if (strcmp("ACT", status) != 0) {
@@ -342,10 +342,10 @@ class ClientPrompt {
              strerror(errno));
         return -1;
       }
-      fprintf(f, "%s", resp + pos);
+      fprintf(f, "%.*s", fsize, resp + pos);
       fclose(f);
       fprintf(stdout, "%s", resp + pos);
-      fprintf(stdout, "Trials (%s bytes) written to file: %s\n", fsize, fname);
+      fprintf(stdout, "Trials (%d bytes) written to file: %s\n", fsize, fname);
 
       return 0;
     }
@@ -364,9 +364,9 @@ class ClientPrompt {
 
     const char *resp = _tcpClient.runCommand(req);
 
-    char fname[32], fsize[32];
-    int pos;
-    if (sscanf(resp, "RSS OK %s %s %n", fname, fsize, &pos) == 2) {
+    char fname[32];
+    int pos, fsize;
+    if (sscanf(resp, "RSS OK %s %d %n", fname, &fsize, &pos) == 2) {
       FILE *f;
       // Files on parent directories are not to be touched
       if (strstr(fname, "..") != nullptr ||
@@ -375,10 +375,10 @@ class ClientPrompt {
              strerror(errno));
         return -1;
       }
-      fprintf(f, "%s", resp + pos);
+      fprintf(f, "%.*s", fsize, resp + pos);
       fclose(f);
       fprintf(stdout, "%s", resp + pos);
-      fprintf(stdout, "Scoreboard (%s bytes) written to file: %s\n", fsize, fname);
+      fprintf(stdout, "Scoreboard (%d bytes) written to file: %s\n", fsize, fname);
 
       return 0;
     }
