@@ -61,7 +61,7 @@ class GameStorage {
           << std::setw(3) << std::to_string(s.second.score()) << "  | "
           << std::setw(6) << std::to_string(s.first) << " | "
           << s.second.getCode().toString() << " |     "
-          << std::to_string(s.second.nT()) << "     | "
+          << std::to_string(s.second.nT()-1) << "     | "
           << (s.second.debug() ? "DEBUG" : " PLAY") << " |   " << std::setw(3)
           << std::to_string(s.second.duration()) << "s   |\n";
     }
