@@ -20,13 +20,17 @@ class TCPServerParser {
           plid > 999999 || newLine != '\n') {
         return "STR NOK\n";
       }
+      VERBOSE_APPEND("\tType: Show Trials\n");
+      VERBOSE_APPEND("\tPLID: %06d\n", plid);
       GameSession &game = _gameStore.getSession(plid);
       if (!game.exists()) {
+        VERBOSE_APPEND("\tResult: Could not find game.\n");
         return "STR NOK\n";
       }
       const char *status = game.inProgress() ? "ACT" : "FIN";
 
       std::string Fdata = game.showTrials(plid);
+      VERBOSE_APPEND("\tResult: Showing Trials: \n%s\n", Fdata.c_str());
 
       sprintf(req, "RST %s TRIALS_%06d.txt %lu %s\n", status, plid,
               Fdata.size(), Fdata.c_str());
@@ -35,15 +39,18 @@ class TCPServerParser {
 
     if (strncmp(req, "SSB", 3) == 0) {
       std::string Fdata = _gameStore.getScoreboardString();
+      VERBOSE_APPEND("\tType: Show Scoreboard\n");
       if (Fdata.empty()) {
-        VERBOSE_APPEND("Scoreboard is empty.\n");
+        VERBOSE_APPEND("\tResult: Scoreboard is empty.\n");
         return "RSS EMPTY\n";
       }
       const time_t now = time(nullptr);
       char timeStr[15];
       strftime(timeStr, sizeof(timeStr), "%Y%m%d%H%M%S", localtime(&now));
 
-      VERBOSE_APPEND("\tScoreboard: %s\n", Fdata.c_str());
+      VERBOSE_APPEND(
+          "\tResult: Showing Scoreboard SCORES%14s.txt (%lu bytes): \n%s\n",
+          timeStr, Fdata.size(), Fdata.c_str());
       sprintf(req, "RSS OK SCORES%14s.txt %lu %s\n", timeStr, Fdata.size(),
               Fdata.c_str());
       return req;

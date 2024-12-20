@@ -42,7 +42,7 @@ class GameStorage {
     std::stable_sort(_scoreboard.begin(), _scoreboard.end(),
                      [](const std::pair<int, GameSession>& a,
                         const std::pair<int, GameSession>& b) {
-                       return a.second.score() < b.second.score();
+                       return a.second.score() > b.second.score();
                      });
   }
 

@@ -87,8 +87,6 @@ class GameSession {
 
   const Trial &getCode() const { return _code; }
 
-  const int nT() const { return _nT; }
-
   /// @brief Attempts to execute a trial
   /// @param trial To be executed.
   /// @param nT Integer between 1 and 8 representing the trial number.
@@ -234,6 +232,7 @@ class GameSession {
   }
 
   uint16_t nT() const { return _nT; }
+  
   bool debug() const { return _debug; }
 
   bool exists() { return _lastResult != ERROR; }
