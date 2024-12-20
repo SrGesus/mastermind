@@ -135,10 +135,10 @@ class GameSession {
       for (const Trial &t : _trials) {
         if (trial == t) return DUPLICATE;
       }
-      // Register trial
-      getTrial(_nT++) = trial;
       // Calculate numbers of blacks and whites
       bool victory = trial.evaluateNumbers(_code, nB, nW);
+      // Register trial
+      getTrial(_nT++) = trial;
       // Check if limit of trials was exceeded.
       if (_nT > TRIALS_NUMBER) {
         _lastResult = LOSS;
