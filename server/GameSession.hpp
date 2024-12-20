@@ -137,7 +137,7 @@ class GameSession {
       // Calculate numbers of blacks and whites
       bool victory = trial.evaluateNumbers(_code, nB, nW);
       // Check if limit of trials was exceeded.
-      if (_nT == TRIALS_NUMBER) {
+      if (_nT > TRIALS_NUMBER) {
         _lastResult = LOSS;
       }
       // Or if it was a victory
