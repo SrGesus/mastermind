@@ -49,23 +49,23 @@ class GameStorage {
   std::string getScoreboardString() {
     if (_scoreboard.empty()) return "";
     std::stringstream str;
-    str << "┌───────────────────────────────────────────────────────────┐\n";
-    str << "│                       TOP " << std::setw(2)
+    str << "+-----------------------------------------------------------+\n";
+    str << "|                       TOP " << std::setw(2)
         << std::to_string(_scoreboard.size())
-        << " SCORES                       │\n";
-    str << "├────┬───────┬────────┬──────┬───────────┬───────┬──────────┤\n"
-           "│    │ SCORE │ PLAYER │ CODE │ NO TRIALS │  MODE │ DURATION │\n";
+        << " SCORES                       |\n";
+    str << "+----+-------+--------+------+-----------+-------+----------+\n"
+           "|    | SCORE | PLAYER | CODE | NO TRIALS |  MODE | DURATION |\n";
     for (size_t i = 0; i < _scoreboard.size(); i++) {
       const auto& s = _scoreboard[i];
-      str << "│" << std::setw(3) << std::to_string(i + 1) << " │  "
-          << std::setw(3) << std::to_string(s.second.score()) << "  │ "
-          << std::setw(6) << std::to_string(s.first) << " │ "
-          << s.second.getCode().toString() << " │     "
-          << std::to_string(s.second.nT()) << "     │ "
-          << (s.second.debug() ? "DEBUG" : " PLAY") << " │   " << std::setw(3)
-          << std::to_string(s.second.duration()) << "s   │\n";
+      str << "|" << std::setw(3) << std::to_string(i + 1) << " |  "
+          << std::setw(3) << std::to_string(s.second.score()) << "  | "
+          << std::setw(6) << std::to_string(s.first) << " | "
+          << s.second.getCode().toString() << " |     "
+          << std::to_string(s.second.nT()) << "     | "
+          << (s.second.debug() ? "DEBUG" : " PLAY") << " |   " << std::setw(3)
+          << std::to_string(s.second.duration()) << "s   |\n";
     }
-    str << "└────┴───────┴────────┴──────┴───────────┴───────┴──────────┘\n";
+    str << "+----+-------+--------+------+-----------+-------+----------+\n";
     return str.str();
   }
 };
