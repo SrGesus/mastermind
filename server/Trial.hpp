@@ -101,17 +101,23 @@ class Trial {
 
     char codeCol[4] = {code.bc1(), code.bc2(), code.bc3(), code.bc4()};
     char colors[4] = {bc1(), bc2(), bc3(), bc4()};
+    // Blacks
     for (int i = 0; i < 4; i++) {
       if (codeCol[i] == colors[i]) {
         // Don't compare this spot again
         colors[i] = ColorByte::None;
+        codeCol[i] = ColorByte::None;
         nB++;
         continue;
       }
+    }
+    // Whites
+    for (int i = 0; i < 4; i++) {
+      if (codeCol[i] == 0) continue;
       for (int j = 0; j < 4; j++) {
         if (codeCol[i] == colors[j]) {
           // Don't compare this spot again
-          colors[i] = ColorByte::None;
+          colors[j] = ColorByte::None;
           nW++;
           break;
         }
