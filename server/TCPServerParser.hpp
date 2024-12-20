@@ -28,7 +28,8 @@ class TCPServerParser {
 
       std::string Fdata = game.showTrials();
 
-      sprintf(req, "RST %s TRIALS_%06d.txt %lu %s\n", status, plid, Fdata.size(), Fdata.c_str());
+      sprintf(req, "RST %s TRIALS_%06d.txt %lu %s\n", status, plid,
+              Fdata.size(), Fdata.c_str());
       return req;
     }
 
@@ -41,11 +42,13 @@ class TCPServerParser {
       const time_t now = time(nullptr);
       char timeStr[15];
       strftime(timeStr, sizeof(timeStr), "%Y%m%d%H%M%S", localtime(&now));
-      
+
       VERBOSE_APPEND("\tScoreboard: %s\n", Fdata.c_str());
-      sprintf(req, "RSS OK SCORES%14s.txt %lu %s\n", timeStr, Fdata.size(), Fdata.c_str());
+      sprintf(req, "RSS OK SCORES%14s.txt %lu %s\n", timeStr, Fdata.size(),
+              Fdata.c_str());
       return req;
     }
+    VERBOSE_APPEND("\tResult: Couldn't process request: %s", req);
     return "ERR\n";
   }
 };

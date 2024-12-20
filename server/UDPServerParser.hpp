@@ -126,12 +126,12 @@ class UDPServerParser {
       VERBOSE_APPEND("\tType: Quit\n");
       VERBOSE_APPEND("\tPLID: %06d\n", plid);
       GameSession &game = _gameStore.getSession(plid);
-      if (!game.inProgress()) {
+      // Attempt to end game
+      if (!game.endGame()) {
         VERBOSE_APPEND("\tResult: There's currently no game in progress.\n");
         return "RQT NOK\n";
       }
       VERBOSE_APPEND("\tResult: Quit game.\n");
-      game.endGame();
       const Trial &code = game.getCode();
       sprintf(_buf, "RQT OK %c %c %c %c\n", code.c1(), code.c2(), code.c3(),
               code.c4());

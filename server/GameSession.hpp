@@ -34,12 +34,14 @@ class GameSession {
   /// @brief Maximum number of guesses that can be made in a game.
   static constexpr int TRIALS_NUMBER = 8;
 
+  /// @brief Epoch time in seconds of game start.
   time_t _startTime = 0;
-  uint16_t _maxTime : 10 = 0;
-  uint16_t _remainingTime : 10 = 0;
-  uint16_t _nT : 4 = 1;
-  uint8_t _debug : 1 = false;
-  uint8_t _score : 7 = 0;
+  /// @brief Provided time limit of game in seconds.
+  uint32_t _maxTime : 10 = 0;
+  /// @brief Time from start to end in seconds.
+  uint32_t _duration : 10 = 0;
+  uint32_t _nT : 4 = 1;
+  uint32_t _debug : 1 = false;
   TrialResult _lastResult = ERROR;
   Trial _code;
   Trial _trials[TRIALS_NUMBER];
@@ -83,16 +85,6 @@ class GameSession {
 
   const Trial &getCode() const { return _code; }
 
-  /// @brief Generates string representation of played trials.
-  /// @return String representation of played trials.
-  std::string showTrials() const {
-    std::string s;
-    for (int i = 1; i < _nT; i++) {
-      s += getTrial(i).toString() + "\n";
-    }
-    return s + std::to_string(_remainingTime) + "\n";
-  }
-
   /// @brief Attempts to execute a trial
   /// @param trial To be executed.
   /// @param nT Integer between 1 and 8 representing the trial number.
@@ -131,75 +123,70 @@ class GameSession {
       }
       // Cases: TIMEOUT/QUIT/ERROR
       return _lastResult;
+    } else if (inProgress()) {  // Check if there is still time left
+      // If not retry, trial must be next trial.
+      if (nT != _nT) {
+        return INVALID;
+      }
+      // Check if trial was not attempted before.
+      for (const Trial &t : _trials) {
+        if (trial == t) return DUPLICATE;
+      }
+      // Register trial
+      getTrial(_nT++) = trial;
+      // Calculate numbers of blacks and whites
+      bool victory = trial.evaluateNumbers(_code, nB, nW);
+      // Check if limit of trials was exceeded.
+      if (_nT == TRIALS_NUMBER) {
+        _lastResult = LOSS;
+      }
+      // Or if it was a victory
+      if (victory) {
+        _lastResult = WIN;
+      }
     }
-
-    // Check if there is still time left
-    if (!checkTime()) {
-      _lastResult = TIMEOUT;
-      return _lastResult;
-    }
-    // Otherwise trial must be next trial.
-    if (nT != _nT) {
-      return INVALID;
-    }
-    // Check if trial was not attempted before.
-    for (const Trial &t : _trials) {
-      if (trial == t) return DUPLICATE;
-    }
-
-    getTrial(_nT++) = trial;
-    // Calculate numbers of blacks and whites
-    bool victory = trial.evaluateNumbers(_code, nB, nW);
-    // Check if limit of trials was exceeded.
-    if (_nT == TRIALS_NUMBER) {
-      _lastResult = LOSS;
-    }
-    // Or if it was a victory
-    if (victory) {
-      _lastResult = WIN;
-    }
+    // Cases: WIN/LOSS/PLAYING/TIMEOUT
     return _lastResult;
   }
 
   /// @brief Set game to no longer be in progress.
-  void endGame() { 
-    _lastResult = QUIT;
-    updateRemaining(time(nullptr));
+  /// @return Whether game was quited sucessfully or not if it wasn't in progress.
+  int endGame() {
+    if (inProgress()) {
+      _lastResult = QUIT;
+      return true;
+    }
+    return false;
   }
 
   /// @brief Get game score.
   int score() const { return _nT; }
 
-  /// @brief Updates the remaining time.
-  /// @param currentTime 
-  /// @return Updated remaining time for session.
-  uint16_t updateRemaining(time_t currentTime) {
-    uint16_t duration = currentTime - _startTime;
-    if (duration > _maxTime) { 
-      _remainingTime = 0;
-    } else {
-      _remainingTime = _maxTime - duration;
+  /// @brief Generates string representation of played trials.
+  /// @return String representation of played trials.
+  std::string showTrials() const {
+    std::string s;
+    for (int i = 1; i < _nT; i++) {
+      s += getTrial(i).toString() + "\n";
     }
-    return _remainingTime;
+    return s + std::to_string(getRemaining()) + "\n";
   }
-  /// @brief If time has expired will end game.
-  /// @return Whether game is within time limits.
-  bool checkTime() {
-    time_t current = time(nullptr);
-    updateRemaining(current);
-    if (current - _startTime > _maxTime) {
-      _lastResult = TIMEOUT;
-      return false;
-    } else {
-      return true;
-    }
+
+  time_t getRemaining() const {
+    return static_cast<time_t>(_maxTime - _duration);
   }
 
   /// @return Whether game is in progress. (Playing and not out of time)
-  bool inProgress() { return _lastResult == PLAYING && checkTime(); }
+  bool inProgress() {
+    if (_lastResult == PLAYING) {
+      _duration = std::clamp(time(NULL) - _startTime, static_cast<time_t>(0),
+                             static_cast<time_t>(_maxTime));
+      if (getRemaining() <= 0) _lastResult = TIMEOUT;
+    }
+    return _lastResult == PLAYING;
+  }
 
   uint16_t nT() { return _nT; }
-  TrialResult lastResult() { return _lastResult; }
 
   bool exists() { return _lastResult != ERROR; }
 };
