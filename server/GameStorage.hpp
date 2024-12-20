@@ -2,6 +2,7 @@
 #define GAMESTORAGE_HPP
 
 #include <algorithm>
+#include <iostream>
 #include <optional>
 #include <unordered_map>
 #include <vector>
@@ -45,20 +46,27 @@ class GameStorage {
                      });
   }
 
-  std::vector<std::pair<int, GameSession>> getScoreboard() {
-    return _scoreboard;
-  }
-
   std::string getScoreboardString() {
-    std::string scoreboardString;
-    auto scoreboard = getScoreboard();
-    for (auto const& s : scoreboard) {
-      scoreboardString += std::to_string(s.first) + " " +
-                          s.second.getCode().toString() + " " +
-                          std::to_string(s.second.nT()) + " " +
-                          std::to_string(s.second.score()) + "\n";
+    if (_scoreboard.empty()) return "";
+    std::stringstream str;
+    str << "┌───────────────────────────────────────────────────────────┐\n";
+    str << "│                       TOP " << std::setw(2)
+        << std::to_string(_scoreboard.size())
+        << " SCORES                       │\n";
+    str << "├────┬───────┬────────┬──────┬───────────┬───────┬──────────┤\n"
+           "│    │ SCORE │ PLAYER │ CODE │ NO TRIALS │  MODE │ DURATION │\n";
+    for (size_t i = 0; i < _scoreboard.size(); i++) {
+      const auto& s = _scoreboard[i];
+      str << "│" << std::setw(3) << std::to_string(i + 1) << " │  "
+          << std::setw(3) << std::to_string(s.second.score()) << "  │ "
+          << std::setw(6) << std::to_string(s.first) << " │ "
+          << s.second.getCode().toString() << " │     "
+          << std::to_string(s.second.nT()) << "     │ "
+          << (s.second.debug() ? "DEBUG" : " PLAY") << " │   " << std::setw(3)
+          << std::to_string(s.second.duration()) << "s   │\n";
     }
-    return scoreboardString;
+    str << "└────┴───────┴────────┴──────┴───────────┴───────┴──────────┘\n";
+    return str.str();
   }
 };
 #endif  // GAMESTORAGE_HPP_

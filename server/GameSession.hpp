@@ -219,6 +219,10 @@ class GameSession {
     return static_cast<time_t>(_maxTime - _duration);
   }
 
+  uint32_t duration() const {
+    return _duration;
+  }
+
   /// @return Whether game is in progress. (Playing and not out of time)
   bool inProgress() {
     if (_lastResult == PLAYING) {
@@ -229,7 +233,8 @@ class GameSession {
     return _lastResult == PLAYING;
   }
 
-  uint16_t nT() { return _nT; }
+  uint16_t nT() const { return _nT; }
+  bool debug() const { return _debug; }
 
   bool exists() { return _lastResult != ERROR; }
 };
