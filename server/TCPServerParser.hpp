@@ -26,7 +26,7 @@ class TCPServerParser {
       }
       const char *status = game.inProgress() ? "ACT" : "FIN";
 
-      std::string Fdata = game.showTrials();
+      std::string Fdata = game.showTrials(plid);
 
       sprintf(req, "RST %s TRIALS_%06d.txt %lu %s\n", status, plid,
               Fdata.size(), Fdata.c_str());

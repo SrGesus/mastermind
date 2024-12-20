@@ -178,13 +178,40 @@ class GameSession {
     }
     res << " game found for player " + std::to_string(plid) + "\n";
     res << std::put_time(std::localtime(&result), "%c %Z");
-    for (int i = 1; i < _nT; i++) {
-      res << "\t" + std::to_string(i) + " - " + getTrial(i).toString() + "\n";
+    res << "\n";
+    if (_lastResult == WIN) {
+      res << "Congratulations! You won in " + std::to_string(_nT) + " trials!\n";
+    } else if (_lastResult == PLAYING) {
+      res << "Currently playing trial " + std::to_string(_nT) + "!\n";
+    } else {
+      res << "You lost! The secret code was " + _code.toString() + "\n";
     }
-    res << std::to_string(getRemaining()) + "\n";
+
+    res << "\n" << " Trial " << " Code " << " nB nW" << "\n";
+    uint16_t nB = 0, nW = 0;
+    for (int i = TRIALS_NUMBER; i > 0; --i) {
+      Trial t = getTrial(i);
+      res << std::setw(6) << std::to_string(i) << "  " << t.toString() << "  ";
+      if (i < _nT) {
+        t.getnBW(nB, nW);
+        res << std::setw(2) << std::to_string(nB) << " " << std::setw(2) << std::to_string(nW) << "\n";
+      } else {
+        res << "\n";
+      }
+
+    }
+    res << std::setw(10) << " " << "\n";
+
+
+    if (_lastResult == TIMEOUT) {
+      res << "\nYou ran out of time!\n";
+    } else {
+      res << "\nYou have " + std::to_string(getRemaining()) + "s remaining!\n";
+    }
     return res.str();
   }
 
+  /// @return Remaining playing time in seconds.
   time_t getRemaining() const {
     return static_cast<time_t>(_maxTime - _duration);
   }
