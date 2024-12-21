@@ -165,7 +165,7 @@ class GameSession {
   /// @brief Get game score.
   int score() const { return 
     (TRIALS_NUMBER - _nT + 1) * 
-    (1 - ((_duration -1) / 600)); 
+    (600 - _duration) / 5; 
   }
 
   /// @brief Generates string representation of played trials.
